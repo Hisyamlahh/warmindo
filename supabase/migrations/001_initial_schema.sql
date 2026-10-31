@@ -86,6 +86,10 @@ CREATE POLICY "Profiles are viewable by authenticated users"
   TO authenticated
   USING (true);
 
+CREATE POLICY "Enable insert for authentication trigger"
+  ON profiles FOR INSERT
+  WITH CHECK (true);
+
 CREATE POLICY "Users can update own profile"
   ON profiles FOR UPDATE
   TO authenticated
@@ -204,17 +208,40 @@ INSERT INTO categories (name) VALUES
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+LANGUAGE plpgsql 
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_role public.user_role := 'kasir';
+  v_name text;
 BEGIN
-  INSERT INTO public.profiles (id, full_name, role)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
-    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'kasir')
+  -- Tentukan nama
+  v_name := COALESCE(
+    NEW.raw_user_meta_data->>'full_name',
+    SPLIT_PART(NEW.email, '@', 1),
+    'User Warmindo'
   );
+
+  -- Tentukan role secara aman
+  IF NEW.raw_user_meta_data->>'role' = 'admin' THEN
+    v_role := 'admin'::public.user_role;
+  ELSE
+    v_role := 'kasir'::public.user_role;
+  END IF;
+
+  INSERT INTO public.profiles (id, full_name, role)
+  VALUES (NEW.id, v_name, v_role)
+  ON CONFLICT (id) DO NOTHING;
+
   RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE WARNING 'handle_new_user error: %', SQLERRM;
+    RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users

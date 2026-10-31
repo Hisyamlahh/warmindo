@@ -15,6 +15,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
   late final Animation<double> _fadeAnimation;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -22,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1000),
     );
 
     _fadeAnimation = CurvedAnimation(
@@ -35,15 +36,27 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigateAfterDelay() async {
-    // Wait for the splash animation to play.
-    await Future.delayed(const Duration(seconds: 2));
+    // Tunggu animasi splash 1.5 detik
+    await Future.delayed(const Duration(milliseconds: 1500));
 
-    if (!mounted) return;
+    if (!mounted || _hasNavigated) return;
 
     final authProvider = context.read<AuthProvider>();
-    await authProvider.checkAuthStatus();
 
-    if (!mounted) return;
+    try {
+      // Timeout maksimal 3 detik agar aplikasi tidak pernah hang/stuck
+      await authProvider.checkAuthStatus().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          debugPrint('Auth check timeout, proceeding to login screen');
+        },
+      );
+    } catch (e) {
+      debugPrint('Auth check error: $e');
+    }
+
+    if (!mounted || _hasNavigated) return;
+    _hasNavigated = true;
 
     if (authProvider.isAuthenticated) {
       context.go('/dashboard');
