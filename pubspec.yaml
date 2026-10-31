@@ -1,0 +1,44 @@
+name: warmindo_pos
+description: "Aplikasi Kasir Warmindo - POS System"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Backend & Auth
+  supabase_flutter: ^2.8.4
+
+  # State Management
+  provider: ^6.1.2
+
+  # Routing
+  go_router: ^14.8.1
+
+  # QR Code
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^6.0.2
+
+  # Local Storage
+  flutter_secure_storage: ^9.2.4
+
+  # Utilities
+  intl: ^0.20.2
+  uuid: ^4.5.1
+  share_plus: ^10.1.4
+  path_provider: ^2.1.5
+  screenshot: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
