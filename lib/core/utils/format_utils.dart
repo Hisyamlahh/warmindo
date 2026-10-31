@@ -1,17 +1,25 @@
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
 class FormatUtils {
   FormatUtils._();
+
+  static bool _isDateInitialized = false;
+
+  static Future<void> init() async {
+    if (!_isDateInitialized) {
+      try {
+        await initializeDateFormatting('id_ID', null);
+        _isDateInitialized = true;
+      } catch (_) {}
+    }
+  }
 
   static final _currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
     decimalDigits: 0,
   );
-
-  static final _dateFormat = DateFormat('dd MMM yyyy', 'id_ID');
-  static final _timeFormat = DateFormat('HH:mm', 'id_ID');
-  static final _dateTimeFormat = DateFormat('dd MMM yyyy, HH:mm', 'id_ID');
 
   /// Format angka ke format Rupiah (Rp 15.000)
   static String formatCurrency(double amount) {
@@ -20,17 +28,28 @@ class FormatUtils {
 
   /// Format tanggal (31 Okt 2026)
   static String formatDate(DateTime date) {
-    return _dateFormat.format(date);
+    try {
+      return DateFormat('dd MMM yyyy', 'id_ID').format(date);
+    } catch (_) {
+      return DateFormat('dd MMM yyyy').format(date);
+    }
   }
 
   /// Format waktu (22:30)
   static String formatTime(DateTime date) {
-    return _timeFormat.format(date);
+    try {
+      return DateFormat('HH:mm', 'id_ID').format(date);
+    } catch (_) {
+      return DateFormat('HH:mm').format(date);
+    }
   }
 
   /// Format tanggal dan waktu (31 Okt 2026, 22:30)
   static String formatDateTime(DateTime date) {
-    return _dateTimeFormat.format(date);
+    try {
+      return DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(date);
+    } catch (_) {
+      return DateFormat('dd MMM yyyy, HH:mm').format(date);
+    }
   }
 }
-

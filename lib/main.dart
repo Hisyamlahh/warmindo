@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:warmindo_pos/core/router/app_router.dart';
 import 'package:warmindo_pos/core/services/supabase_service.dart';
 import 'package:warmindo_pos/core/theme/app_theme.dart';
+import 'package:warmindo_pos/core/utils/format_utils.dart';
 import 'package:warmindo_pos/features/auth/providers/auth_provider.dart';
 import 'package:warmindo_pos/features/cart/providers/cart_provider.dart';
 import 'package:warmindo_pos/features/catalog/providers/catalog_provider.dart';
@@ -12,11 +14,22 @@ import 'package:warmindo_pos/features/history/providers/history_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inisialisasi locale bahasa Indonesia untuk format tanggal dan mata uang
+  try {
+    await initializeDateFormatting('id_ID', null);
+    await FormatUtils.init();
+  } catch (e) {
+    debugPrint('DateFormatting initialize error: $e');
+  }
+
+  // Inisialisasi Supabase
   try {
     await SupabaseService.instance.initialize();
   } catch (e) {
     debugPrint('Supabase initialize error: $e');
   }
+
   runApp(const WarmindoApp());
 }
 
