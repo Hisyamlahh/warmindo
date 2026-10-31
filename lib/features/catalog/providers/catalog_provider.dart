@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:warmindo_pos/features/catalog/models/category_model.dart';
@@ -106,6 +107,40 @@ class CatalogProvider extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
+  // Upload Image to Supabase Storage
+  // ---------------------------------------------------------------------------
+
+  Future<String> uploadProductImage(XFile imageFile) async {
+    try {
+      final bytes = await imageFile.readAsBytes();
+      final fileExt = imageFile.name.split('.').last.toLowerCase();
+      final fileName = 'menu_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+
+      String contentType = 'image/jpeg';
+      if (fileExt == 'png') {
+        contentType = 'image/png';
+      } else if (fileExt == 'webp') {
+        contentType = 'image/webp';
+      }
+
+      await _supabase.storage.from('products').uploadBinary(
+        fileName,
+        bytes,
+        fileOptions: FileOptions(
+          contentType: contentType,
+          upsert: true,
+        ),
+      );
+
+      final publicUrl = _supabase.storage.from('products').getPublicUrl(fileName);
+      return publicUrl;
+    } catch (e) {
+      debugPrint('Upload image error: $e');
+      rethrow;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // ADMIN ONLY – CRUD operations
   // ---------------------------------------------------------------------------
 
@@ -194,7 +229,6 @@ class CatalogProvider extends ChangeNotifier {
           .from('products')
           .update({'stock': newStock}).eq('id', productId);
 
-      // Update local state immediately for responsiveness
       final index = _products.indexWhere((p) => p.id == productId);
       if (index != -1) {
         _products[index] = _products[index].copyWith(stock: newStock);

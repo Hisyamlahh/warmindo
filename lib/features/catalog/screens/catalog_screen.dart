@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -19,6 +22,7 @@ class CatalogScreen extends StatefulWidget {
 
 class _CatalogScreenState extends State<CatalogScreen> {
   final _searchController = TextEditingController();
+  final _imagePicker = ImagePicker();
   final _currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
@@ -41,7 +45,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
     super.dispose();
   }
 
-  // ── Show Add/Edit Product Modal Form ───────────────────────────────────────
+  // ── Show Add/Edit Product Modal Form with Gallery Image Picker ──────────────
   void _showProductFormDialog({ProductModel? product}) {
     final catalog = context.read<CatalogProvider>();
     final isEditing = product != null;
@@ -53,12 +57,16 @@ class _CatalogScreenState extends State<CatalogScreen> {
     final stockController = TextEditingController(
       text: product != null ? product.stock.toString() : '20',
     );
-    final imageController = TextEditingController(text: product?.imageUrl ?? '');
 
     int? selectedCategory = product?.categoryId ??
         (catalog.categories.isNotEmpty ? catalog.categories.first.id : null);
     bool isAvailable = product?.isAvailable ?? true;
     final formKey = GlobalKey<FormState>();
+
+    // State gambar lokal
+    XFile? pickedImageFile;
+    String? currentImageUrl = product?.imageUrl;
+    bool isUploadingImage = false;
     bool isSubmitting = false;
 
     showModalBottomSheet(
@@ -68,6 +76,32 @@ class _CatalogScreenState extends State<CatalogScreen> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
+            // Helper function pick from gallery
+            Future<void> pickImage() async {
+              try {
+                final XFile? image = await _imagePicker.pickImage(
+                  source: ImageSource.gallery,
+                  imageQuality: 85,
+                  maxWidth: 1024,
+                  maxHeight: 1024,
+                );
+                if (image != null) {
+                  setSheetState(() {
+                    pickedImageFile = image;
+                  });
+                }
+              } catch (e) {
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    SnackBar(
+                      content: Text('Gagal memilih gambar dari galeri: $e'),
+                      backgroundColor: AppTheme.accentRed,
+                    ),
+                  );
+                }
+              }
+            }
+
             return Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -100,11 +134,133 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
                         // Title
                         Text(
-                          isEditing ? 'Edit Menu' : 'Tambah Menu Baru',
+                          isEditing ? 'Edit Menu & Foto' : 'Tambah Menu Baru',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // ── Image Picker / Preview Section ───────────────────
+                        const Text(
+                          'Foto Menu (Galeri HP)',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        Container(
+                          width: double.infinity,
+                          height: 170,
+                          decoration: BoxDecoration(
+                            color: AppTheme.backgroundWhite,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppTheme.dividerColor),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Tampilkan gambar yang dipilih atau yang sudah ada
+                                if (pickedImageFile != null)
+                                  Image.file(
+                                    File(pickedImageFile!.path),
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    fit: BoxFit.cover,
+                                  )
+                                else if (currentImageUrl != null &&
+                                    currentImageUrl!.isNotEmpty)
+                                  Image.network(
+                                    currentImageUrl!,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        _emptyImagePlaceholder(pickImage),
+                                  )
+                                else
+                                  _emptyImagePlaceholder(pickImage),
+
+                                // Tombol aksi di atas gambar jika ada gambar
+                                if (pickedImageFile != null ||
+                                    (currentImageUrl != null &&
+                                        currentImageUrl!.isNotEmpty))
+                                  Positioned(
+                                    right: 8,
+                                    bottom: 8,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Material(
+                                          color: Colors.black.withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(20),
+                                          child: InkWell(
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            onTap: pickImage,
+                                            child: const Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 10,
+                                                vertical: 6,
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.photo_library,
+                                                    size: 16,
+                                                    color: Colors.white,
+                                                  ),
+                                                  SizedBox(width: 4),
+                                                  Text(
+                                                    'Ganti Foto',
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Material(
+                                          color: AppTheme.accentRed
+                                              .withValues(alpha: 0.8),
+                                          shape: const CircleBorder(),
+                                          child: InkWell(
+                                            customBorder: const CircleBorder(),
+                                            onTap: () {
+                                              setSheetState(() {
+                                                pickedImageFile = null;
+                                                currentImageUrl = null;
+                                              });
+                                            },
+                                            child: const Padding(
+                                              padding: EdgeInsets.all(6),
+                                              child: Icon(
+                                                Icons.delete,
+                                                size: 16,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -177,16 +333,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
                         ),
                         const SizedBox(height: 12),
 
-                        // URL Gambar (Opsional)
-                        TextFormField(
-                          controller: imageController,
-                          decoration: const InputDecoration(
-                            labelText: 'URL Gambar (Opsional)',
-                            hintText: 'https://...',
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
                         // Switch Status Tersedia
                         SwitchListTile(
                           contentPadding: EdgeInsets.zero,
@@ -205,7 +351,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
                         // Tombol Simpan
                         ElevatedButton(
-                          onPressed: isSubmitting
+                          onPressed: (isSubmitting || isUploadingImage)
                               ? null
                               : () async {
                                   if (!formKey.currentState!.validate()) return;
@@ -216,9 +362,22 @@ class _CatalogScreenState extends State<CatalogScreen> {
                                     final name = nameController.text.trim();
                                     final price = double.parse(priceController.text.trim());
                                     final stock = int.parse(stockController.text.trim());
-                                    final imageUrl = imageController.text.trim().isEmpty
-                                        ? null
-                                        : imageController.text.trim();
+
+                                    // Upload image jika ada file baru dari galeri
+                                    String? finalImageUrl = currentImageUrl;
+                                    if (pickedImageFile != null) {
+                                      setSheetState(() => isUploadingImage = true);
+                                      try {
+                                        finalImageUrl = await catalog
+                                            .uploadProductImage(pickedImageFile!);
+                                      } catch (storageError) {
+                                        debugPrint(
+                                            'Storage upload error: $storageError');
+                                        // Tetap lanjut atau berikan pemberitahuan
+                                      } finally {
+                                        setSheetState(() => isUploadingImage = false);
+                                      }
+                                    }
 
                                     if (isEditing) {
                                       await catalog.updateProduct(
@@ -227,7 +386,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                                         price: price,
                                         stock: stock,
                                         categoryId: selectedCategory,
-                                        imageUrl: imageUrl,
+                                        imageUrl: finalImageUrl,
                                         isAvailable: isAvailable,
                                       );
                                     } else {
@@ -236,7 +395,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                                         price: price,
                                         stock: stock,
                                         categoryId: selectedCategory,
-                                        imageUrl: imageUrl,
+                                        imageUrl: finalImageUrl,
                                         isAvailable: isAvailable,
                                       );
                                     }
@@ -253,7 +412,10 @@ class _CatalogScreenState extends State<CatalogScreen> {
                                       );
                                     }
                                   } catch (e) {
-                                    setSheetState(() => isSubmitting = false);
+                                    setSheetState(() {
+                                      isSubmitting = false;
+                                      isUploadingImage = false;
+                                    });
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
@@ -264,14 +426,23 @@ class _CatalogScreenState extends State<CatalogScreen> {
                                     }
                                   }
                                 },
-                          child: isSubmitting
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
+                          child: (isSubmitting || isUploadingImage)
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(isUploadingImage
+                                        ? 'Mengunggah Foto...'
+                                        : 'Menyimpan...'),
+                                  ],
                                 )
                               : Text(isEditing ? 'Perbarui Menu' : 'Simpan Menu'),
                         ),
@@ -284,6 +455,49 @@ class _CatalogScreenState extends State<CatalogScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _emptyImagePlaceholder(VoidCallback onPick) {
+    return InkWell(
+      onTap: onPick,
+      borderRadius: BorderRadius.circular(12),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryOrange.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.add_photo_alternate_outlined,
+                size: 32,
+                color: AppTheme.primaryOrange,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Pilih Foto dari Galeri HP',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.primaryOrange,
+              ),
+            ),
+            const SizedBox(height: 2),
+            const Text(
+              'Mendukung JPG, JPEG, PNG, WEBP',
+              style: TextStyle(
+                fontSize: 11,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -880,7 +1094,7 @@ class _ProductCard extends StatelessWidget {
                         children: [
                           Icon(Icons.edit_outlined, size: 18),
                           SizedBox(width: 8),
-                          Text('Edit Menu'),
+                          Text('Edit Menu & Foto'),
                         ],
                       ),
                     ),
