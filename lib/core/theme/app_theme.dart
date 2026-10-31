@@ -3,40 +3,65 @@ import 'package:flutter/material.dart';
 class AppTheme {
   AppTheme._();
 
-  // Brand Colors
-  static const Color primaryOrange = Color(0xFFFF6B35);
-  static const Color primaryDark = Color(0xFFE55A2B);
-  static const Color secondaryDark = Color(0xFF2D3436);
-  static const Color accentGreen = Color(0xFF00B894);
-  static const Color accentRed = Color(0xFFD63031);
-  static const Color backgroundWhite = Color(0xFFF8F9FA);
+  // Authentic Warmindo Brand Colors (Merah, Kuning, Hijau, Biru Logo)
+  static const Color warmindoRed = Color(0xFFE51A22); // Merah Khas Spanduk Warmindo
+  static const Color warmindoYellow = Color(0xFFFFD200); // Kuning Khas Garis & Font
+  static const Color warmindoGreen = Color(0xFF009B4D); // Hijau Khas Garis Bawah
+  static const Color warmindoBlue = Color(0xFF00A0E9); // Biru Cyan Khas Teks "Warmindo"
+  static const Color warmindoDarkRed = Color(0xFFB7151C);
+
+  // Aliases for compatibility
+  static const Color primaryOrange = warmindoRed;
+  static const Color primaryDark = warmindoDarkRed;
+  static const Color secondaryDark = Color(0xFF1E272E);
+  static const Color accentGreen = warmindoGreen;
+  static const Color accentRed = warmindoRed;
+  static const Color warningYellow = warmindoYellow;
+
+  // Backgrounds & Neutrals
+  static const Color backgroundWhite = Color(0xFFF9FAFB);
   static const Color surfaceWhite = Color(0xFFFFFFFF);
   static const Color textPrimary = Color(0xFF2D3436);
   static const Color textSecondary = Color(0xFF636E72);
   static const Color textLight = Color(0xFFB2BEC3);
   static const Color dividerColor = Color(0xFFDFE6E9);
-  static const Color warningYellow = Color(0xFFFDAA3E);
+
+  // Gradient Khas Warmindo Spanduk (Merah -> Kuning -> Hijau)
+  static const LinearGradient warmindoStripGradient = LinearGradient(
+    colors: [warmindoRed, warmindoYellow, warmindoGreen],
+    stops: [0.0, 0.5, 1.0],
+  );
+
+  static const LinearGradient warmindoHeaderGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      Color(0xFFE51A22),
+      Color(0xFFC71118),
+    ],
+  );
 
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorSchemeSeed: primaryOrange,
+      colorSchemeSeed: warmindoRed,
       scaffoldBackgroundColor: backgroundWhite,
       appBarTheme: const AppBarTheme(
-        backgroundColor: primaryOrange,
+        backgroundColor: warmindoRed,
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: Colors.white,
           fontSize: 20,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryOrange,
+          backgroundColor: warmindoRed,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
@@ -44,14 +69,14 @@ class AppTheme {
           ),
           textStyle: const TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: primaryOrange,
-          side: const BorderSide(color: primaryOrange),
+          foregroundColor: warmindoRed,
+          side: const BorderSide(color: warmindoRed, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -71,11 +96,11 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primaryOrange, width: 2),
+          borderSide: const BorderSide(color: warmindoRed, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: accentRed),
+          borderSide: const BorderSide(color: warmindoRed),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -91,19 +116,19 @@ class AppTheme {
         ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: primaryOrange,
+        backgroundColor: warmindoRed,
         foregroundColor: Colors.white,
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: surfaceWhite,
-        selectedItemColor: primaryOrange,
+        selectedItemColor: warmindoRed,
         unselectedItemColor: textSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
       chipTheme: ChipThemeData(
         backgroundColor: backgroundWhite,
-        selectedColor: primaryOrange.withValues(alpha: 0.15),
+        selectedColor: warmindoRed.withValues(alpha: 0.12),
         labelStyle: const TextStyle(fontSize: 13),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -118,4 +143,3 @@ class AppTheme {
     );
   }
 }
-

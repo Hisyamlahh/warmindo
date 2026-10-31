@@ -2,12 +2,13 @@ class AppConstants {
   AppConstants._();
 
   // Supabase Configuration
-  // Ganti dengan kredensial Supabase Anda
-  static const String supabaseUrl = 'YOUR_SUPABASE_URL';
-  static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
+  static const String supabaseUrl = 'https://ymbjzwjsagkcrqwpeubf.supabase.co';
+  static const String supabaseAnonKey =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltYmp6d2pzYWdrY3Jxd3BldWJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0NTUwNTgsImV4cCI6MjEwOTAzMTA1OH0._uVnjaN-Pck3jmWzcb3vE-1eO-6J31cGyYKcI8QmMUU';
 
   // App Info
-  static const String appName = 'Warmindo POS';
+  static const String appName = 'Warmindo JugaJago';
+  static const String appSubtitle = 'Warung Makan Indomie';
   static const String appVersion = '1.0.0';
 
   // Table QR Prefix
@@ -28,4 +29,3 @@ class AppConstants {
     'Snack',
   ];
 }
-

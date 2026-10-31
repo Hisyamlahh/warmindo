@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:warmindo_pos/core/theme/app_theme.dart';
+import 'package:warmindo_pos/core/widgets/warmindo_logo.dart';
 import 'package:warmindo_pos/features/auth/providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -41,10 +42,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.backgroundWhite,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 28),
             child: Consumer<AuthProvider>(
               builder: (context, auth, _) {
                 return Form(
@@ -52,44 +54,33 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // --------------------------------------------------
-                      // Logo
-                      // --------------------------------------------------
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryOrange.withValues(alpha: 0.12),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.restaurant_menu,
-                          size: 52,
-                          color: AppTheme.primaryOrange,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
 
                       // --------------------------------------------------
-                      // App name
+                      // Logo Spanduk Warmindo JugaJago
                       // --------------------------------------------------
+                      const WarmindoLogo(width: 290),
+                      const SizedBox(height: 28),
+
+                      // Welcome Text
                       const Text(
-                        'Warmindo POS',
+                        'Masuk ke Akun Kasir',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.secondaryDark,
+                          color: AppTheme.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 4),
                       const Text(
-                        'Sistem Kasir Digital',
+                        'Silakan login untuk mengelola transaksi Warmindo',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 13,
                           color: AppTheme.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 32),
 
                       // --------------------------------------------------
                       // Error message
@@ -99,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppTheme.accentRed.withValues(alpha: 0.08),
+                            color: AppTheme.accentRed.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: AppTheme.accentRed.withValues(alpha: 0.3),
@@ -129,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
 
                       // --------------------------------------------------
-                      // Email field
+                      // Email Field
                       // --------------------------------------------------
                       TextFormField(
                         controller: _emailController,
@@ -137,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           labelText: 'Email',
-                          hintText: 'contoh@email.com',
+                          hintText: 'nama@warmindo.com',
                           prefixIcon: Icon(Icons.email_outlined),
                         ),
                         validator: (value) {
@@ -145,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             return 'Email tidak boleh kosong';
                           }
                           final emailRegex = RegExp(
-                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                            r'^[a-zA-Z0-9.]+@[a-zA-Z0-9]+\.[a-zA-Z]+',
                           );
                           if (!emailRegex.hasMatch(value.trim())) {
                             return 'Format email tidak valid';
@@ -156,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 16),
 
                       // --------------------------------------------------
-                      // Password field
+                      // Password Field
                       // --------------------------------------------------
                       TextFormField(
                         controller: _passwordController,
@@ -165,13 +156,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         onFieldSubmitted: (_) => _handleLogin(),
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          hintText: 'Masukkan password',
-                          prefixIcon: const Icon(Icons.lock_outline),
+                          hintText: 'Minimal 6 karakter',
+                          prefixIcon: const Icon(Icons.lock_outlined),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
                             ),
                             onPressed: () {
                               setState(() {
@@ -190,42 +181,50 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 28),
 
                       // --------------------------------------------------
-                      // Login button
+                      // Submit Button
                       // --------------------------------------------------
                       SizedBox(
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
                           onPressed: auth.isLoading ? null : _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.warmindoRed,
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                           child: auth.isLoading
                               ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
+                                  height: 22,
+                                  width: 22,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2.5,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
+                                    color: Colors.white,
                                   ),
                                 )
-                              : const Text('Masuk'),
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Masuk ke POS',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Icon(Icons.arrow_forward, size: 20, color: Colors.white),
+                                  ],
+                                ),
                         ),
                       ),
-                      const SizedBox(height: 32),
-
-                      // --------------------------------------------------
-                      // Footer
-                      // --------------------------------------------------
-                      Text(
-                        'v1.0.0',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textLight,
-                        ),
-                      ),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 );

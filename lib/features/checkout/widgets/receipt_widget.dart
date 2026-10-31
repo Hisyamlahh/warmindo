@@ -34,10 +34,10 @@ class ReceiptWidget extends StatelessWidget {
           // Header
           const Center(
             child: Text(
-              'WARMINDO POS',
+              'WARMINDO JUGAJAGO',
               style: TextStyle(
                 fontFamily: 'Courier',
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
                 color: AppTheme.textPrimary,
@@ -47,7 +47,7 @@ class ReceiptWidget extends StatelessWidget {
           const SizedBox(height: 4),
           const Center(
             child: Text(
-              'Spesialis Warmindo & Minuman Kekinian',
+              'Warung Makan Indomie & Minuman',
               style: TextStyle(
                 fontSize: 12,
                 color: AppTheme.textSecondary,
@@ -236,3 +236,4 @@ class ReceiptWidget extends StatelessWidget {
     );
   }
 }
+

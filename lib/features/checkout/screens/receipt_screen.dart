@@ -15,7 +15,7 @@ class ReceiptScreen extends StatelessWidget {
 
   void _shareReceiptText() {
     final buffer = StringBuffer();
-    buffer.writeln('=== STRUK PEMBAYARAN WARMINDO ===');
+    buffer.writeln('=== STRUK PEMBAYARAN WARMINDO JUGAJAGO ===');
     buffer.writeln('No. Transaksi : ${order.shortId}');
     buffer.writeln('Tanggal       : ${FormatUtils.formatDateTime(order.createdAt)}');
     if (order.tableNumber != null) {

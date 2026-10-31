@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:warmindo_pos/core/theme/app_theme.dart';
+import 'package:warmindo_pos/core/widgets/warmindo_logo.dart';
 import 'package:warmindo_pos/features/auth/providers/auth_provider.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -36,7 +37,6 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigateAfterDelay() async {
-    // Tunggu animasi splash 1.5 detik
     await Future.delayed(const Duration(milliseconds: 1500));
 
     if (!mounted || _hasNavigated) return;
@@ -44,7 +44,6 @@ class _SplashScreenState extends State<SplashScreen>
     final authProvider = context.read<AuthProvider>();
 
     try {
-      // Timeout maksimal 3 detik agar aplikasi tidak pernah hang/stuck
       await authProvider.checkAuthStatus().timeout(
         const Duration(seconds: 3),
         onTimeout: () {
@@ -74,66 +73,98 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.primaryOrange,
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Logo icon
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.restaurant_menu,
-                  size: 64,
-                  color: Colors.white,
-                ),
+      backgroundColor: AppTheme.warmindoRed,
+      body: Stack(
+        children: [
+          // Background decorative elements
+          Positioned(
+            top: -60,
+            right: -60,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.05),
               ),
-              const SizedBox(height: 28),
-
-              // App name
-              const Text(
-                'Warmindo POS',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Subtitle
-              Text(
-                'Sistem Kasir Digital',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white.withValues(alpha: 0.85),
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 48),
-
-              // Loading indicator
-              SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Colors.white.withValues(alpha: 0.8),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          Positioned(
+            bottom: -80,
+            left: -80,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.warmindoYellow.withValues(alpha: 0.08),
+              ),
+            ),
+          ),
+
+          // Main Center Content
+          Center(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo Spanduk Warmindo
+                  const WarmindoLogo(width: 300),
+                  const SizedBox(height: 32),
+
+                  // Subtitle
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Sistem Kasir & Operasional Digital',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 48),
+
+                  // Loading indicator
+                  SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppTheme.warmindoYellow,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Bottom Tri-Color Bar (Kuning & Hijau)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Column(
+              children: [
+                Container(height: 6, color: AppTheme.warmindoYellow),
+                Container(height: 10, color: AppTheme.warmindoGreen),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

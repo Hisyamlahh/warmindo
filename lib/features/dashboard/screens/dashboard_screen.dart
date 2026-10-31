@@ -73,17 +73,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         return Scaffold(
           appBar: AppBar(
+            backgroundColor: AppTheme.warmindoRed,
+            elevation: 2,
             title: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Warmindo POS'),
-                const SizedBox(width: 10),
+                RichText(
+                  text: const TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Warmindo ',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'JugaJago',
+                        style: TextStyle(
+                          color: AppTheme.warmindoYellow,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
                 _RoleBadge(role: auth.userRole),
               ],
             ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(4),
+              child: Column(
+                children: [
+                  Container(height: 2, color: AppTheme.warmindoYellow),
+                  Container(height: 2, color: AppTheme.warmindoGreen),
+                ],
+              ),
+            ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.logout),
+                icon: const Icon(Icons.logout, color: Colors.white),
                 tooltip: 'Keluar',
                 onPressed: () => _confirmLogout(context, auth),
               ),

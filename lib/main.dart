@@ -69,7 +69,7 @@ class _WarmindoAppState extends State<WarmindoApp> {
         ChangeNotifierProvider(create: (_) => HistoryProvider()),
       ],
       child: MaterialApp.router(
-        title: 'Warmindo POS',
+        title: 'Warmindo JugaJago',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         routerConfig: _router,
