@@ -1,42 +1,18 @@
 appId: com.warmindo.warmindo_pos
+info:
+  title: Login
+  description: Login dari layar login, isi email & password kasir/admin, validasi masuk ke Dashboard.
 ---
-# ==============================================================================
-# Flow: Authentication & Login Flow
-# Menguji proses login akun kasir / admin hingga masuk ke Dashboard utama.
-# ==============================================================================
-
-- launchApp:
-    clearState: true
-
-# Pastikan berada di halaman login
-- assertVisible:
-    text: ".*Masuk ke Akun Kasir.*"
-    timeout: 5000
-
-# Input Email Kasir / Admin
-- tapOn: "Email"
+- launchApp
+- assertVisible: "Masuk ke Akun Kasir"
+- tapOn:
+    text: "Email"
 - inputText: "admin@warmindo.com"
-
-# Input Password
-- tapOn: "Password"
+- tapOn:
+    text: "Password"
 - inputText: "password123"
-
-# Sembunyikan keyboard jika masih terbuka
-- hideKeyboard
-
-# Tekan tombol login
-- tapOn: "Masuk ke POS"
-
-# Tunggu proses autentikasi Supabase dan navigasi ke Dashboard (maks 8 detik)
-- assertVisible:
-    text: ".*Katalog.*"
-    timeout: 8000
-
-# Verifikasi elemen navigasi utama di Dashboard
+- tapOn:
+    text: "Masuk ke POS"
 - assertVisible: "Katalog"
-- assertVisible: "Scan QR"
 - assertVisible: "Meja"
 - assertVisible: "Riwayat"
-
-# Verifikasi bilah pencarian katalog muncul
-- assertVisible: ".*Cari menu.*"

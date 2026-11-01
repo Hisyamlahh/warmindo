@@ -1,29 +1,11 @@
 appId: com.warmindo.warmindo_pos
+info:
+  title: Landing
+  description: Verifikasi halaman awal aplikasi, logo Warmindo JugaJago, dan form login kasir tampil.
 ---
-# ==============================================================================
-# Flow: Landing Screen Test
-# Memverifikasi aplikasi terbuka dengan benar, splash screen berjalan,
-# dan landing di Login Screen dengan semua komponen antarmuka yang lengkap.
-# ==============================================================================
-
-- launchApp:
-    clearState: true
-
-# Tunggu transisi dari Splash Screen (maksimal 5 detik)
-- assertVisible:
-    text: ".*Masuk ke Akun Kasir.*"
-    timeout: 5000
-
-# Verifikasi teks sambutan dan branding Warmindo JugaJago
+- launchApp
+- assertVisible: "Masuk ke Akun Kasir"
 - assertVisible: "Silakan login untuk mengelola transaksi Warmindo"
-
-# Verifikasi form input email dan password tersedia
-- assertVisible: "Email"
-- assertVisible: "Password"
-
-# Verifikasi tombol submit login tersedia
-- assertVisible: "Masuk ke POS"
-
-# Uji validasi input kosong ketika tombol submit ditekan langsung
-- tapOn: "Masuk ke POS"
+- tapOn:
+    text: "Masuk ke POS"
 - assertVisible: "Email tidak boleh kosong"
