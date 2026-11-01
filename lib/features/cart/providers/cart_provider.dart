@@ -26,6 +26,11 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearTable() {
+    _selectedTable = null;
+    notifyListeners();
+  }
+
   void setTableData(int id, String number, String qrData) {
     _selectedTable = TableModel(
       id: id,

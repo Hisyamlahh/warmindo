@@ -51,7 +51,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 'Katalog':
         return const CatalogScreen();
       case 'Scan QR':
-        return const QrScannerScreen();
+        return QrScannerScreen(
+          onTableBound: () {
+            setState(() {
+              _currentIndex = 0; // Pindah otomatis ke Katalog Menu
+            });
+          },
+        );
       case 'Generate QR':
         return const QrGeneratorScreen();
       case 'Riwayat':

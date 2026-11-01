@@ -620,6 +620,98 @@ class _CatalogScreenState extends State<CatalogScreen> {
           : null,
       body: Column(
         children: [
+          // ── Active Table Banner (Muncul setelah scan QR Meja) ─────────
+          Consumer<CartProvider>(
+            builder: (context, cart, _) {
+              if (cart.tableNumber == null) return const SizedBox.shrink();
+
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppTheme.warmindoYellow.withValues(alpha: 0.15),
+                  border: const Border(
+                    bottom: BorderSide(color: AppTheme.warmindoYellow, width: 1.5),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: AppTheme.warmindoRed,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.table_restaurant,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          children: [
+                            const TextSpan(
+                              text: 'Pesanan untuk: ',
+                              style: TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Meja ${cart.tableNumber}',
+                              style: const TextStyle(
+                                color: AppTheme.warmindoRed,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () {
+                        cart.clearTable();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Sesi meja dilepas (Mode Takeaway/Umum)'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppTheme.dividerColor),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.close, size: 14, color: AppTheme.accentRed),
+                            SizedBox(width: 4),
+                            Text(
+                              'Lepas',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.accentRed,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+
           // ── Search bar ────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
