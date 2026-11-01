@@ -136,11 +136,12 @@ class CheckoutProvider extends ChangeNotifier {
         }
       }
 
-      // 4. Update table status if set
+      // 4. Status meja otomatis menjadi 'occupied' (Terisi).
+      // Pengosongan meja dilakukan secara manual oleh kasir di halaman Meja saat pelanggan selesai/pulang.
       if (cart.tableId != null) {
         try {
           await _supabase.from('tables').update({
-            'status': 'available',
+            'status': 'occupied',
           }).eq('id', cart.tableId!);
         } catch (e) {
           debugPrint('Warning: table status update failed: $e');
@@ -317,16 +318,8 @@ class CheckoutProvider extends ChangeNotifier {
         'payment_method': paymentMethod,
       }).eq('id', order.id);
 
-      // Make table available
-      if (order.tableId != null) {
-        try {
-          await _supabase.from('tables').update({
-            'status': 'available',
-          }).eq('id', order.tableId!);
-        } catch (e) {
-          debugPrint('Warning: table available update failed: $e');
-        }
-      }
+      // Catatan: Meja tetap dalam status 'occupied' (Terisi).
+      // Pengosongan meja dilakukan secara manual di halaman Meja saat pelanggan selesai/pulang.
 
       _isProcessing = false;
       notifyListeners();
