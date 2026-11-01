@@ -1,0 +1,82 @@
+appId: com.warmindo.warmindo_pos
+---
+# ==============================================================================
+# Flow: UI Navigation & Scrolling Interactions
+# Menguji interaksi gestur scrolling vertikal dan horizontal pada:
+# 1. Daftar Katalog Menu & Kategori Chip
+# 2. Halaman Status Meja (Daftar Meja)
+# 3. Halaman Riwayat Transaksi
+# ==============================================================================
+
+- launchApp
+
+# Jika masih berada di Login Screen, lakukan login terlebih dahulu
+- runFlow:
+    when:
+      visible: "Masuk ke Akun Kasir"
+    commands:
+      - tapOn: "Email"
+      - inputText: "admin@warmindo.com"
+      - tapOn: "Password"
+      - inputText: "password123"
+      - hideKeyboard
+      - tapOn: "Masuk ke POS"
+      - assertVisible:
+          text: ".*Katalog.*"
+          timeout: 8000
+
+# ------------------------------------------------------------------------------
+# 1. Scrolling di Tab Katalog Menu
+# ------------------------------------------------------------------------------
+- tapOn: "Katalog"
+- assertVisible: ".*Cari menu.*"
+
+# Scroll ke bawah untuk melihat menu-menu di bagian bawah
+- scroll
+
+# Scroll kembali ke bagian atas
+- scrollUntilVisible:
+    element:
+      text: ".*Cari menu.*"
+    direction: UP
+
+# Filter kategori dengan menekan chip kategori (Indomie Goreng / Minuman)
+- tapOn:
+    text: "Indomie Goreng"
+    optional: true
+
+- tapOn:
+    text: "Semua"
+    optional: true
+
+# ------------------------------------------------------------------------------
+# 2. Navigasi & Scrolling di Tab Meja
+# ------------------------------------------------------------------------------
+- tapOn: "Meja"
+- assertVisible:
+    text: ".*Total Meja.*"
+    timeout: 5000
+
+# Scroll daftar meja ke bawah
+- scroll
+
+# Scroll kembali ke atas untuk melihat statistik meja
+- scrollUntilVisible:
+    element:
+      text: ".*Total Meja.*"
+    direction: UP
+
+# ------------------------------------------------------------------------------
+# 3. Navigasi & Scrolling di Tab Riwayat Transaksi
+# ------------------------------------------------------------------------------
+- tapOn: "Riwayat"
+- assertVisible:
+    text: ".*Semua.*"
+    timeout: 5000
+
+# Scroll daftar riwayat transaksi
+- scroll
+
+# Kembali ke tab Katalog Menu utama
+- tapOn: "Katalog"
+- assertVisible: ".*Cari menu.*"
