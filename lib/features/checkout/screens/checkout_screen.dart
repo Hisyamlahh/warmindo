@@ -386,8 +386,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   // Submit Payment Button
                   LoadingButton(
                     text: checkout.paymentMethod == 'cash'
-                        ? 'Konfirmasi Pembayaran'
-                        : 'Selesai & Cetak Struk',
+                        ? 'Konfirmasi Pembayaran (Lunas)'
+                        : 'Selesai & Cetak Struk (QRIS)',
                     isLoading: checkout.isProcessing,
                     icon: Icons.check_circle_outline,
                     onPressed: (!isSufficient && checkout.paymentMethod == 'cash')
@@ -405,6 +405,91 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               context.push('/receipt', extra: completedOrder);
                             }
                           },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Pending Order Button (Bayar Nanti / Makan Dulu)
+                  OutlinedButton.icon(
+                    onPressed: checkout.isProcessing
+                        ? null
+                        : () async {
+                            final pendingOrder = await checkout.createPendingOrder(
+                              cart: cart,
+                              cashierId: auth.currentUser?.id,
+                              cashierName:
+                                  auth.currentUser?.email?.split('@').first ??
+                                      'Kasir',
+                            );
+
+                            if (pendingOrder != null && context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Pesanan Meja ${pendingOrder.tableNumber ?? '-'} disimpan sebagai PENDING (Bayar Nanti).',
+                                  ),
+                                  backgroundColor: AppTheme.warmindoYellow,
+                                ),
+                              );
+                              context.push('/receipt', extra: pendingOrder);
+                            }
+                          },
+                    icon: const Icon(Icons.timer_outlined, color: AppTheme.warmindoRed),
+                    label: const Text(
+                      'Simpan & Bayar Nanti (Pending)',
+                      style: TextStyle(
+                        color: AppTheme.warmindoRed,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: const BorderSide(color: AppTheme.warmindoRed, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Cancel current order
+                  TextButton.icon(
+                    onPressed: checkout.isProcessing
+                        ? null
+                        : () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Batalkan Pesanan?'),
+                                content: const Text(
+                                  'Semua menu yang dipilih akan dihapus dari keranjang belanja.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: const Text('Kembali'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppTheme.accentRed,
+                                    ),
+                                    child: const Text('Batalkan'),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirm == true && context.mounted) {
+                              cart.clear();
+                              context.go('/dashboard');
+                            }
+                          },
+                    icon: const Icon(Icons.cancel_outlined, color: AppTheme.textSecondary, size: 18),
+                    label: const Text(
+                      'Batalkan Transaksi Ini',
+                      style: TextStyle(color: AppTheme.textSecondary),
+                    ),
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -494,3 +579,4 @@ class _QuickCashChip extends StatelessWidget {
     );
   }
 }
+

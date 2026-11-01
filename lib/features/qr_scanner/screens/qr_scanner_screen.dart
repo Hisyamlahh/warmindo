@@ -76,7 +76,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
       TableModel? targetTable;
 
-      // Coba cari atau daftarkan meja di Supabase dengan timeout 3 detik
+      // Coba cari meja di Supabase dengan timeout 3 detik
       try {
         final existing = await Supabase.instance.client
             .from('tables')
@@ -96,41 +96,14 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 .timeout(const Duration(seconds: 2));
           } catch (_) {}
         } else {
-          // Meja belum ada di DB, buatkan secara otomatis
-          try {
-            final insertRes = await Supabase.instance.client
-                .from('tables')
-                .insert({
-                  'table_number': tableNumber,
-                  'qr_code_data': qrCodeData,
-                  'status': 'occupied',
-                })
-                .select()
-                .single()
-                .timeout(const Duration(seconds: 3));
-
-            targetTable = TableModel.fromJson(insertRes);
-          } catch (_) {
-            // Jika insert gagal karena RLS, buat objek meja lokal
-            targetTable = TableModel(
-              id: DateTime.now().millisecondsSinceEpoch % 100000,
-              tableNumber: tableNumber,
-              qrCodeData: qrCodeData,
-              status: 'occupied',
-              createdAt: DateTime.now(),
-            );
-          }
+          // Meja tidak terdaftar! Tampilkan notifikasi penolakan
+          _showError('Meja no "$tableNumber" tidak terdaftar! Silakan hubungi Admin untuk mendaftarkan meja.');
+          return;
         }
       } catch (e) {
         debugPrint('Supabase table lookup error/timeout: $e');
-        // Fallback: tetap ikat nomor meja ke sesi keranjang agar kasir tidak terhenti
-        targetTable = TableModel(
-          id: DateTime.now().millisecondsSinceEpoch % 100000,
-          tableNumber: tableNumber,
-          qrCodeData: qrCodeData,
-          status: 'occupied',
-          createdAt: DateTime.now(),
-        );
+        _showError('Meja no "$tableNumber" tidak terdaftar! Periksa koneksi atau hubungi Admin.');
+        return;
       }
 
       if (!mounted) return;

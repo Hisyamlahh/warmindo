@@ -65,7 +65,7 @@ class ReceiptWidget extends StatelessWidget {
             _buildRow('Meja', 'Meja ${order.tableNumber}'),
           if (order.cashierName != null)
             _buildRow('Kasir', order.cashierName!),
-          _buildRow('Status', order.paymentStatus.toUpperCase()),
+          _buildStatusRow(order.paymentStatus),
 
           const SizedBox(height: 12),
           _buildDashedLine(),
@@ -178,6 +178,59 @@ class ReceiptWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 color: AppTheme.textLight,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusRow(String status) {
+    Color color;
+    String label;
+
+    switch (status.toLowerCase()) {
+      case 'paid':
+        color = AppTheme.warmindoGreen;
+        label = 'LUNAS';
+        break;
+      case 'cancelled':
+        color = AppTheme.warmindoRed;
+        label = 'DIBATALKAN';
+        break;
+      case 'pending':
+      default:
+        color = AppTheme.warningYellow;
+        label = 'PENDING (BELUM BAYAR)';
+        break;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text(
+            'Status',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: color, width: 1),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: color,
               ),
             ),
           ),

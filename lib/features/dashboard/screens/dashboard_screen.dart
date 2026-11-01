@@ -30,9 +30,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       role: null,
     ),
     _TabItem(
-      label: 'Generate QR',
-      icon: Icons.qr_code,
-      role: 'admin',
+      label: 'Meja',
+      icon: Icons.table_restaurant,
+      role: null, // Kasir dan Admin sama-sama bisa melihat status meja
     ),
     _TabItem(
       label: 'Riwayat',
@@ -58,6 +58,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             });
           },
         );
+      case 'Meja':
       case 'Generate QR':
         return const QrGeneratorScreen();
       case 'Riwayat':

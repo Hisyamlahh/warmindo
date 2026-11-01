@@ -1,15 +1,17 @@
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 
-import 'package:warmindo_pos/core/theme/app_theme.dart';
 import 'package:warmindo_pos/core/constants/app_constants.dart';
+import 'package:warmindo_pos/core/theme/app_theme.dart';
+import 'package:warmindo_pos/features/auth/providers/auth_provider.dart';
 import 'package:warmindo_pos/features/catalog/models/table_model.dart';
 
 class QrGeneratorScreen extends StatefulWidget {
@@ -24,6 +26,7 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
   late TabController _tabController;
   List<TableModel> _tables = [];
   bool _isLoading = false;
+  String _statusFilter = 'all'; // 'all', 'available', 'occupied'
 
   @override
   void initState() {
@@ -67,18 +70,66 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
     }
   }
 
+  Future<void> _updateTableStatus(TableModel table, String newStatus) async {
+    try {
+      await Supabase.instance.client
+          .from('tables')
+          .update({'status': newStatus})
+          .eq('id', table.id);
+
+      setState(() {
+        final idx = _tables.indexWhere((t) => t.id == table.id);
+        if (idx != -1) {
+          _tables[idx] = table.copyWith(status: newStatus);
+        }
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              newStatus == 'available'
+                  ? 'Meja ${table.tableNumber} sekarang KOSONG / TERSEDIA.'
+                  : 'Meja ${table.tableNumber} sekarang TERISI.',
+            ),
+            backgroundColor: newStatus == 'available'
+                ? AppTheme.warmindoGreen
+                : AppTheme.warmindoRed,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal mengubah status meja: $e'),
+            backgroundColor: AppTheme.accentRed,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _generateNewTable() async {
     final tableNumberController = TextEditingController();
 
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Tambah Meja Baru'),
+        title: const Row(
+          children: [
+            Icon(Icons.add_circle_outline, color: AppTheme.warmindoRed),
+            SizedBox(width: 8),
+            Text('Tambah Meja Baru'),
+          ],
+        ),
         content: TextField(
           controller: tableNumberController,
           decoration: const InputDecoration(
             labelText: 'Nomor Meja',
-            hintText: 'Contoh: 1, 2, A1, dll.',
+            hintText: 'Contoh: 01, 02, A1',
+            prefixIcon: Icon(Icons.table_restaurant),
           ),
           autofocus: true,
           textCapitalization: TextCapitalization.characters,
@@ -95,7 +146,10 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
                 Navigator.pop(context, value);
               }
             },
-            child: const Text('Generate'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.warmindoRed,
+            ),
+            child: const Text('Generate QR'),
           ),
         ],
       ),
@@ -135,7 +189,7 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Meja $result berhasil ditambahkan!'),
+            content: Text('Meja $result berhasil ditambahkan & QR dibuat!'),
             backgroundColor: AppTheme.accentGreen,
           ),
         );
@@ -174,16 +228,41 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'QR Code Meja ${table.tableNumber}',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.qr_code_2, color: AppTheme.warmindoRed, size: 28),
+                const SizedBox(width: 8),
+                Text(
+                  'QR Code Meja ${table.tableNumber}',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: table.isAvailable
+                    ? AppTheme.warmindoGreen.withValues(alpha: 0.12)
+                    : AppTheme.warmindoRed.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                table.isAvailable ? 'Status: Tersedia (Kosong)' : 'Status: Terisi (Ada Pelanggan)',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: table.isAvailable ? AppTheme.warmindoGreen : AppTheme.warmindoRed,
+                ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             RepaintBoundary(
               key: qrKey,
               child: Container(
@@ -192,17 +271,24 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppTheme.dividerColor),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
                     QrImageView(
                       data: table.qrCodeData,
                       version: QrVersions.auto,
-                      size: 250,
+                      size: 240,
                       backgroundColor: Colors.white,
                       eyeStyle: const QrEyeStyle(
                         eyeShape: QrEyeShape.square,
-                        color: AppTheme.secondaryDark,
+                        color: AppTheme.warmindoRed,
                       ),
                       dataModuleStyle: const QrDataModuleStyle(
                         dataModuleShape: QrDataModuleShape.square,
@@ -214,16 +300,17 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
                       'Meja ${table.tableNumber}',
                       style: const TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.bold,
                         color: AppTheme.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      AppConstants.appName,
-                      style: const TextStyle(
+                    const SizedBox(height: 2),
+                    const Text(
+                      'Warmindo JugaJago',
+                      style: TextStyle(
                         fontSize: 14,
-                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.warmindoRed,
                       ),
                     ),
                   ],
@@ -245,7 +332,10 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
                   child: ElevatedButton.icon(
                     onPressed: () => _downloadQr(qrKey, table),
                     icon: const Icon(Icons.download_outlined),
-                    label: const Text('Unduh'),
+                    label: const Text('Unduh / Cetak'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.warmindoGreen,
+                    ),
                   ),
                 ),
               ],
@@ -295,12 +385,11 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('QR Code disimpan di: $filePath'),
+            content: Text('QR Code disimpan: $filePath'),
             backgroundColor: AppTheme.accentGreen,
           ),
         );
 
-        // Also offer to share the saved file
         await Share.shareXFiles(
           [XFile(filePath)],
           text: 'QR Code Meja ${table.tableNumber} - ${AppConstants.appName}',
@@ -376,80 +465,197 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('QR Generator'),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(icon: Icon(Icons.table_restaurant), text: 'QR Meja'),
-            Tab(icon: Icon(Icons.qr_code), text: 'QR Pembayaran'),
-          ],
+    final auth = context.watch<AuthProvider>();
+    final isAdmin = auth.userRole == 'admin';
+
+    return Column(
+      children: [
+        // Tab Header
+        Container(
+          color: Colors.white,
+          child: TabBar(
+            controller: _tabController,
+            labelColor: AppTheme.warmindoRed,
+            unselectedLabelColor: AppTheme.textSecondary,
+            indicatorColor: AppTheme.warmindoRed,
+            indicatorWeight: 3,
+            tabs: const [
+              Tab(icon: Icon(Icons.table_restaurant), text: 'Status & QR Meja'),
+              Tab(icon: Icon(Icons.qr_code), text: 'Info QRIS'),
+            ],
+          ),
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildTableQrTab(),
-          _buildPaymentQrTab(),
-        ],
-      ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildTableQrTab(isAdmin),
+              _buildPaymentQrTab(),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildTableQrTab() {
+  Widget _buildTableQrTab(bool isAdmin) {
+    final totalCount = _tables.length;
+    final availableCount = _tables.where((t) => t.isAvailable).length;
+    final occupiedCount = _tables.where((t) => !t.isAvailable).length;
+
+    final filteredTables = _tables.where((t) {
+      if (_statusFilter == 'available') return t.isAvailable;
+      if (_statusFilter == 'occupied') return !t.isAvailable;
+      return true;
+    }).toList();
+
     return RefreshIndicator(
       onRefresh: _fetchTables,
-      color: AppTheme.primaryOrange,
+      color: AppTheme.warmindoRed,
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _generateNewTable,
-                icon: const Icon(Icons.add),
-                label: const Text('Generate QR Meja Baru'),
-              ),
+          // 1. Statistics Cards
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    title: 'Total Meja',
+                    count: totalCount,
+                    color: AppTheme.textPrimary,
+                    icon: Icons.table_restaurant,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _StatCard(
+                    title: 'Tersedia',
+                    count: availableCount,
+                    color: AppTheme.warmindoGreen,
+                    icon: Icons.check_circle_outline,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _StatCard(
+                    title: 'Terisi',
+                    count: occupiedCount,
+                    color: AppTheme.warmindoRed,
+                    icon: Icons.people_alt_outlined,
+                  ),
+                ),
+              ],
             ),
           ),
+
+          // 2. Filter chips
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                _TableFilterChip(
+                  label: 'Semua ($totalCount)',
+                  isSelected: _statusFilter == 'all',
+                  onSelected: () => setState(() => _statusFilter = 'all'),
+                ),
+                const SizedBox(width: 8),
+                _TableFilterChip(
+                  label: 'Tersedia ($availableCount)',
+                  isSelected: _statusFilter == 'available',
+                  color: AppTheme.warmindoGreen,
+                  onSelected: () => setState(() => _statusFilter = 'available'),
+                ),
+                const SizedBox(width: 8),
+                _TableFilterChip(
+                  label: 'Terisi ($occupiedCount)',
+                  isSelected: _statusFilter == 'occupied',
+                  color: AppTheme.warmindoRed,
+                  onSelected: () => setState(() => _statusFilter = 'occupied'),
+                ),
+              ],
+            ),
+          ),
+
+          // 3. Admin Add Table Button OR Cashier Info Notice
+          if (isAdmin)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _generateNewTable,
+                  icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+                  label: const Text(
+                    'Generate QR Meja Baru (Admin)',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.warmindoRed,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            )
+          else
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppTheme.warmindoYellow.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.warmindoYellow),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, size: 18, color: AppTheme.textPrimary),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Mode Kasir: Anda dapat memantau dan mengubah status meja (Tersedia / Terisi). Penambahan meja baru hanya oleh Admin.',
+                      style: TextStyle(fontSize: 12, color: AppTheme.textPrimary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // 4. Tables List
           Expanded(
             child: _isLoading
                 ? const Center(
                     child: CircularProgressIndicator(
-                      color: AppTheme.primaryOrange,
+                      color: AppTheme.warmindoRed,
                     ),
                   )
-                : _tables.isEmpty
+                : filteredTables.isEmpty
                     ? ListView(
                         children: const [
-                          SizedBox(height: 100),
+                          SizedBox(height: 60),
                           Center(
                             child: Column(
                               children: [
                                 Icon(
                                   Icons.table_restaurant_outlined,
-                                  size: 80,
+                                  size: 70,
                                   color: AppTheme.textLight,
                                 ),
-                                SizedBox(height: 16),
+                                SizedBox(height: 12),
                                 Text(
-                                  'Belum ada meja',
+                                  'Tidak ada meja dengan filter ini',
                                   style: TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     color: AppTheme.textSecondary,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Tap tombol di atas untuk menambahkan meja baru',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppTheme.textLight,
                                   ),
                                 ),
                               ],
@@ -458,11 +664,11 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
                         ],
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _tables.length,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        itemCount: filteredTables.length,
                         itemBuilder: (context, index) {
-                          final table = _tables[index];
-                          return _buildTableCard(table);
+                          final table = filteredTables[index];
+                          return _buildTableCard(table, isAdmin);
                         },
                       ),
           ),
@@ -471,85 +677,151 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
     );
   }
 
-  Widget _buildTableCard(TableModel table) {
+  Widget _buildTableCard(TableModel table, bool isAdmin) {
+    final isAvailable = table.isAvailable;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 8,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+          color: isAvailable
+              ? AppTheme.warmindoGreen.withValues(alpha: 0.4)
+              : AppTheme.warmindoRed.withValues(alpha: 0.4),
+          width: 1.5,
         ),
-        leading: Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: AppTheme.primaryOrange.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(
-            Icons.table_restaurant,
-            color: AppTheme.primaryOrange,
-          ),
-        ),
-        title: Text(
-          'Meja ${table.tableNumber}',
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        subtitle: Row(
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: table.isAvailable
-                    ? AppTheme.accentGreen.withValues(alpha: 0.1)
-                    : AppTheme.warningYellow.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                table.isAvailable ? 'Tersedia' : 'Terisi',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: table.isAvailable
-                      ? AppTheme.accentGreen
-                      : AppTheme.warningYellow,
+            Row(
+              children: [
+                // Table Icon & Badge
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: isAvailable
+                        ? AppTheme.warmindoGreen.withValues(alpha: 0.12)
+                        : AppTheme.warmindoRed.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.table_restaurant,
+                    color: isAvailable ? AppTheme.warmindoGreen : AppTheme.warmindoRed,
+                    size: 28,
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Meja ${table.tableNumber}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: isAvailable
+                                  ? AppTheme.warmindoGreen.withValues(alpha: 0.15)
+                                  : AppTheme.warmindoRed.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isAvailable ? Icons.check_circle : Icons.person,
+                                  size: 13,
+                                  color: isAvailable ? AppTheme.warmindoGreen : AppTheme.warmindoRed,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  isAvailable ? 'TERSEDIA' : 'TERISI',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: isAvailable ? AppTheme.warmindoGreen : AppTheme.warmindoRed,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // View QR code button
+                IconButton(
+                  onPressed: () => _showQrBottomSheet(table),
+                  icon: const Icon(Icons.qr_code, color: AppTheme.warmindoRed, size: 26),
+                  tooltip: 'Lihat QR',
+                ),
+
+                // Delete table (only for admin or empty table)
+                if (isAdmin)
+                  IconButton(
+                    onPressed: () => _deleteTable(table),
+                    icon: const Icon(Icons.delete_outline, color: AppTheme.textSecondary, size: 22),
+                    tooltip: 'Hapus Meja',
+                  ),
+              ],
+            ),
+            const Divider(height: 18),
+            // Status Toggle Action Button (Kasir & Admin can toggle!)
+            Row(
+              children: [
+                Expanded(
+                  child: isAvailable
+                      ? OutlinedButton.icon(
+                          onPressed: () => _updateTableStatus(table, 'occupied'),
+                          icon: const Icon(Icons.person, size: 16, color: AppTheme.warmindoRed),
+                          label: const Text(
+                            'Tandai Terisi (Pelanggan Duduk)',
+                            style: TextStyle(color: AppTheme.warmindoRed, fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppTheme.warmindoRed),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                        )
+                      : ElevatedButton.icon(
+                          onPressed: () => _updateTableStatus(table, 'available'),
+                          icon: const Icon(Icons.cleaning_services, size: 16, color: Colors.white),
+                          label: const Text(
+                            'Kosongkan Meja (Pelanggan Pulang)',
+                            style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.warmindoGreen,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                        ),
+                ),
+              ],
             ),
           ],
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              onPressed: () => _showQrBottomSheet(table),
-              icon: const Icon(
-                Icons.qr_code,
-                color: AppTheme.primaryOrange,
-              ),
-              tooltip: 'Lihat QR',
-            ),
-            IconButton(
-              onPressed: () => _deleteTable(table),
-              icon: const Icon(
-                Icons.delete_outline,
-                color: AppTheme.accentRed,
-              ),
-              tooltip: 'Hapus',
-            ),
-          ],
-        ),
-        onTap: () => _showQrBottomSheet(table),
       ),
     );
   }
 
   Widget _buildPaymentQrTab() {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -558,13 +830,13 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: AppTheme.primaryOrange.withValues(alpha: 0.1),
+                color: AppTheme.warmindoRed.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.qr_code_2,
                 size: 50,
-                color: AppTheme.primaryOrange,
+                color: AppTheme.warmindoRed,
               ),
             ),
             const SizedBox(height: 24),
@@ -581,7 +853,7 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
               'QR Pembayaran akan di-generate otomatis saat proses checkout dengan metode QRIS.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 15,
                 color: AppTheme.textSecondary,
                 height: 1.5,
               ),
@@ -590,25 +862,25 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.primaryOrange.withValues(alpha: 0.05),
+                color: AppTheme.warmindoYellow.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppTheme.primaryOrange.withValues(alpha: 0.2),
+                  color: AppTheme.warmindoYellow,
                 ),
               ),
               child: const Row(
                 children: [
                   Icon(
                     Icons.info_outline,
-                    color: AppTheme.primaryOrange,
+                    color: AppTheme.textPrimary,
                   ),
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Pilih metode pembayaran QRIS pada halaman checkout untuk menghasilkan QR pembayaran.',
+                      'Pilih metode pembayaran QRIS pada halaman checkout untuk menghasilkan QR pembayaran dinamis.',
                       style: TextStyle(
-                        fontSize: 14,
-                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                        color: AppTheme.textPrimary,
                       ),
                     ),
                   ),
@@ -617,6 +889,88 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final String title;
+  final int count;
+  final Color color;
+  final IconData icon;
+
+  const _StatCard({
+    required this.title,
+    required this.count,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 4),
+          Text(
+            '$count',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TableFilterChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onSelected;
+  final Color? color;
+
+  const _TableFilterChip({
+    required this.label,
+    required this.isSelected,
+    required this.onSelected,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final chipColor = color ?? AppTheme.warmindoRed;
+
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => onSelected(),
+      selectedColor: chipColor.withValues(alpha: 0.15),
+      labelStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        color: isSelected ? chipColor : AppTheme.textPrimary,
+      ),
+      side: BorderSide(
+        color: isSelected ? chipColor : AppTheme.dividerColor,
       ),
     );
   }
