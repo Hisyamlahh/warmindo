@@ -21,9 +21,7 @@ class QrGeneratorScreen extends StatefulWidget {
   State<QrGeneratorScreen> createState() => _QrGeneratorScreenState();
 }
 
-class _QrGeneratorScreenState extends State<QrGeneratorScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _QrGeneratorScreenState extends State<QrGeneratorScreen> {
   List<TableModel> _tables = [];
   bool _isLoading = false;
   String _statusFilter = 'all'; // 'all', 'available', 'occupied'
@@ -31,14 +29,7 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _fetchTables();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _fetchTables() async {
@@ -468,37 +459,10 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
     final auth = context.watch<AuthProvider>();
     final isAdmin = auth.userRole == 'admin';
 
-    return Column(
-      children: [
-        // Tab Header
-        Container(
-          color: Colors.white,
-          child: TabBar(
-            controller: _tabController,
-            labelColor: AppTheme.warmindoRed,
-            unselectedLabelColor: AppTheme.textSecondary,
-            indicatorColor: AppTheme.warmindoRed,
-            indicatorWeight: 3,
-            tabs: const [
-              Tab(icon: Icon(Icons.table_restaurant), text: 'Status & QR Meja'),
-              Tab(icon: Icon(Icons.qr_code), text: 'Info QRIS'),
-            ],
-          ),
-        ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildTableQrTab(isAdmin),
-              _buildPaymentQrTab(),
-            ],
-          ),
-        ),
-      ],
-    );
+    return _buildTableContent(isAdmin);
   }
 
-  Widget _buildTableQrTab(bool isAdmin) {
+  Widget _buildTableContent(bool isAdmin) {
     final totalCount = _tables.length;
     final availableCount = _tables.where((t) => t.isAvailable).length;
     final occupiedCount = _tables.where((t) => !t.isAvailable).length;
@@ -812,80 +776,6 @@ class _QrGeneratorScreenState extends State<QrGeneratorScreen>
                         ),
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPaymentQrTab() {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: AppTheme.warmindoRed.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.qr_code_2,
-                size: 50,
-                color: AppTheme.warmindoRed,
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'QR Pembayaran QRIS',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'QR Pembayaran akan di-generate otomatis saat proses checkout dengan metode QRIS.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                color: AppTheme.textSecondary,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.warmindoYellow.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppTheme.warmindoYellow,
-                ),
-              ),
-              child: const Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: AppTheme.textPrimary,
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Pilih metode pembayaran QRIS pada halaman checkout untuk menghasilkan QR pembayaran dinamis.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ],
         ),
