@@ -48,3 +48,4 @@ echo -e "${GREEN}[PASS] Seluruh berkas Maestro valid dan lengkap.${NC}"
 
 echo -e "${GREEN}>>> [Pre-commit] Validasi sukses! Commit diizinkan.${NC}"
 exit 0
+

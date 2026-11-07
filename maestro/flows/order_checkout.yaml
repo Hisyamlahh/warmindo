@@ -1,0 +1,80 @@
+appId: com.warmindo.warmindo_pos
+info:
+  title: Order, Pembayaran & Riwayat
+  description: Alur sukses pemesanan menu dari katalog, checkout pembayaran tunai (lunas), penerimaan struk, hingga pengecekan di riwayat transaksi.
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Masuk ke Akun Kasir"
+    timeout: 15000
+- assertVisible: "Masuk ke Akun Kasir"
+
+# Login ke POS
+- tapOn: "Email"
+- inputText: "sudahmalam@gmail.com"
+- tapOn: "Password"
+- inputText: "sudahmalam"
+- hideKeyboard
+- tapOn: "Masuk ke POS"
+
+# Tunggu dashboard katalog muncul
+- extendedWaitUntil:
+    visible: "Semua"
+    timeout: 15000
+- assertVisible: "Semua"
+
+# Tambahkan menu pertama yang tersedia ke keranjang
+- tapOn: "Tambah"
+- extendedWaitUntil:
+    visible: "Lihat Pesanan"
+    timeout: 10000
+- assertVisible: "Lihat Pesanan"
+
+# Buka Keranjang Pesanan
+- tapOn: "Lihat Pesanan"
+- extendedWaitUntil:
+    visible: "Keranjang.*"
+    timeout: 10000
+- assertVisible: "Keranjang.*"
+- assertVisible: "Total"
+- assertVisible: "Proses Pembayaran"
+
+# Lanjut ke Halaman Checkout / Pembayaran
+- tapOn: "Proses Pembayaran"
+- extendedWaitUntil:
+    visible: "Pembayaran"
+    timeout: 10000
+- assertVisible: "Pembayaran"
+- assertVisible: "Ringkasan Pesanan.*"
+- assertVisible: "Pilih Metode Pembayaran"
+
+# Pilih Tunai dan klik Uang Pas
+- tapOn: "Tunai (Cash)"
+- tapOn: "Uang Pas"
+
+# Geser ke bawah agar tombol konfirmasi terlihat
+- scroll
+
+# Konfirmasi Pembayaran
+- tapOn: "Konfirmasi Pembayaran.*"
+
+# Verifikasi Layar Struk & Kembali ke Dashboard
+- extendedWaitUntil:
+    visible: "Struk Pembayaran"
+    timeout: 15000
+- assertVisible: "Struk Pembayaran"
+- assertVisible: "Transaksi Baru"
+- tapOn: "Transaksi Baru"
+
+# Cek Riwayat Transaksi
+- extendedWaitUntil:
+    visible: "Semua"
+    timeout: 15000
+- assertVisible: "Semua"
+- tapOn: "Riwayat.*"
+- extendedWaitUntil:
+    visible: "Semua Tanggal"
+    timeout: 10000
+- assertVisible: "Semua Tanggal"
+- assertVisible: "Lunas"

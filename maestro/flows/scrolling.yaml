@@ -1,38 +1,51 @@
 appId: com.warmindo.warmindo_pos
 info:
-  title: Scroll
-  description: Geser layar katalog menu dan navigasi tab, pastikan elemen tetap tampil stabil.
+  title: Scroll & Geser Katalog Menu
+  description: Pengujian gestur swipe naik dan turun pada daftar katalog menu serta perpindahan tab.
 ---
-- launchApp
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Masuk ke Akun Kasir"
+    timeout: 15000
 - assertVisible: "Masuk ke Akun Kasir"
-- tapOn:
-    text: "Email"
-- inputText: "admin@warmindo.com"
-- tapOn:
-    text: "Password"
-- inputText: "password123"
-- tapOn:
-    text: "Masuk ke POS"
-- assertVisible: "Katalog"
 
-# Geser layar (swipe down & up) pada katalog menu
+# Login
+- tapOn: "Email"
+- inputText: "sudahmalam@gmail.com"
+- tapOn: "Password"
+- inputText: "sudahmalam"
+- hideKeyboard
+- tapOn: "Masuk ke POS"
+
+# Tunggu dashboard muncul
+- extendedWaitUntil:
+    visible: "Semua"
+    timeout: 15000
+- assertVisible: "Semua"
+
+# Geser layar (swipe up & down) pada katalog menu
 - swipe:
-    direction: down
-- assertVisible: "Katalog"
+    direction: UP
+- assertVisible: "Semua"
 - swipe:
-    direction: up
-- assertVisible: "Katalog"
+    direction: DOWN
+- assertVisible: "Semua"
 
 # Pindah ke tab Meja dan uji swipe
-- tapOn:
-    text: "Meja"
+- tapOn: "Meja.*"
+- extendedWaitUntil:
+    visible: "Total Meja"
+    timeout: 10000
 - assertVisible: "Total Meja"
 - swipe:
-    direction: down
+    direction: UP
 - swipe:
-    direction: up
+    direction: DOWN
 
 # Kembali ke tab Katalog
-- tapOn:
-    text: "Katalog"
-- assertVisible: "Katalog"
+- tapOn: "Katalog.*"
+- extendedWaitUntil:
+    visible: "Semua"
+    timeout: 10000
+- assertVisible: "Semua"

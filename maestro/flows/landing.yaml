@@ -1,11 +1,25 @@
 appId: com.warmindo.warmindo_pos
 info:
-  title: Landing
-  description: Verifikasi halaman awal aplikasi, logo Warmindo JugaJago, dan form login kasir tampil.
+  title: Landing & Validasi Form
+  description: Uji verifikasi layar login dan validasi form login kasir.
 ---
-- launchApp
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible: "Masuk ke Akun Kasir"
+    timeout: 15000
 - assertVisible: "Masuk ke Akun Kasir"
 - assertVisible: "Silakan login untuk mengelola transaksi Warmindo"
-- tapOn:
-    text: "Masuk ke POS"
+- assertVisible: "Email"
+- assertVisible: "Password"
+
+# Validasi Error: Tap masuk tanpa input email & password
+- tapOn: "Masuk ke POS"
 - assertVisible: "Email tidak boleh kosong"
+
+# Validasi Error: Format email tidak valid
+- tapOn: "Email"
+- inputText: "kasirbukanemail"
+- hideKeyboard
+- tapOn: "Masuk ke POS"
+- assertVisible: "Format email tidak valid"

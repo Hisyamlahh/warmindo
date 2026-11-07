@@ -53,6 +53,7 @@ jobs:
             echo "Running Maestro End-to-End Tests..."
             maestro test maestro/flows/landing.yaml
             maestro test maestro/flows/login.yaml
+            maestro test maestro/flows/order_checkout.yaml
             maestro test maestro/flows/scrolling.yaml
 
       - name: Upload Maestro Test Reports

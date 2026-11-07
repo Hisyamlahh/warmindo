@@ -1,18 +1,44 @@
 appId: com.warmindo.warmindo_pos
 info:
-  title: Login
-  description: Login dari layar login, isi email & password kasir/admin, validasi masuk ke Dashboard.
+  title: Login Sukses & Navigasi Tab
+  description: Pengujian alur sukses login kasir dan verifikasi navigasi tab dashboard (Katalog, Meja, Riwayat).
 ---
-- launchApp
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Masuk ke Akun Kasir"
+    timeout: 15000
 - assertVisible: "Masuk ke Akun Kasir"
-- tapOn:
-    text: "Email"
-- inputText: "admin@warmindo.com"
-- tapOn:
-    text: "Password"
-- inputText: "password123"
-- tapOn:
-    text: "Masuk ke POS"
-- assertVisible: "Katalog"
-- assertVisible: "Meja"
-- assertVisible: "Riwayat"
+
+# Input kredensial kasir
+- tapOn: "Email"
+- inputText: "sudahmalam@gmail.com"
+- tapOn: "Password"
+- inputText: "sudahmalam"
+- hideKeyboard
+- tapOn: "Masuk ke POS"
+
+# Assertion elemen utama di Dashboard (Katalog)
+- extendedWaitUntil:
+    visible: "Semua"
+    timeout: 15000
+- assertVisible: "Semua"
+- assertVisible: "Scan QR.*"
+- assertVisible: "Meja.*"
+- assertVisible: "Riwayat.*"
+
+# Cek navigasi ke Tab Meja
+- tapOn: "Meja.*"
+- assertVisible: "Total Meja"
+- assertVisible: "Tersedia.*"
+- assertVisible: "Terisi.*"
+
+# Cek navigasi ke Tab Riwayat
+- tapOn: "Riwayat.*"
+- assertVisible: "Semua Tanggal"
+- assertVisible: "Semua"
+- assertVisible: "Lunas"
+
+# Kembali ke Tab Katalog
+- tapOn: "Katalog.*"
+- assertVisible: "Semua"

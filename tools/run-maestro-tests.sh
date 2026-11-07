@@ -64,13 +64,17 @@ else
     echo -e "${BLUE}>>> 1. Menjalankan Landing Flow (maestro/flows/landing.yaml)...${NC}"
     maestro test "$FLOWS_DIR/landing.yaml"
 
-    echo -e "\n${BLUE}>>> 2. Menjalankan Login Flow (maestro/flows/login.yaml)...${NC}"
+    echo -e "\n${BLUE}>>> 2. Menjalankan Login & Navigasi Tab Flow (maestro/flows/login.yaml)...${NC}"
     maestro test "$FLOWS_DIR/login.yaml"
 
-    echo -e "\n${BLUE}>>> 3. Menjalankan Scrolling Flow (maestro/flows/scrolling.yaml)...${NC}"
+    echo -e "\n${BLUE}>>> 3. Menjalankan Order, Pembayaran & Riwayat Flow (maestro/flows/order_checkout.yaml)...${NC}"
+    maestro test "$FLOWS_DIR/order_checkout.yaml"
+
+    echo -e "\n${BLUE}>>> 4. Menjalankan Scrolling Flow (maestro/flows/scrolling.yaml)...${NC}"
     maestro test "$FLOWS_DIR/scrolling.yaml"
 fi
 
 echo -e "\n${GREEN}====================================================${NC}"
 echo -e "${GREEN}   Seluruh Pengujian Maestro Berhasil Diselesaikan!  ${NC}"
 echo -e "${GREEN}====================================================${NC}"
+
