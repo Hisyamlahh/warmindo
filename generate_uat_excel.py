@@ -12,19 +12,18 @@ def generate_uat_excel(file_path):
     section_fill = PatternFill(start_color="FDE8E8", end_color="FDE8E8", fill_type="solid")
     pass_fill = PatternFill(start_color="E6F4EA", end_color="E6F4EA", fill_type="solid") # Soft Green
 
-    title_font = Font(name="Segoe UI", size=16, bold=True, color="FFFFFF")
+    title_font = Font(name="Segoe UI", size=15, bold=True, color="FFFFFF")
     subtitle_font = Font(name="Segoe UI", size=11, bold=True, color="333333")
-    header_font = Font(name="Segoe UI", size=11, bold=True, color="FFFFFF")
-    bold_font = Font(name="Segoe UI", size=10, bold=True, color="222222")
-    normal_font = Font(name="Segoe UI", size=10, color="222222")
-    status_font = Font(name="Segoe UI", size=10, bold=True, color="008000")
+    header_font = Font(name="Segoe UI", size=10, bold=True, color="FFFFFF")
+    bold_font = Font(name="Segoe UI", size=9, bold=True, color="222222")
+    normal_font = Font(name="Segoe UI", size=9, color="222222")
+    status_font = Font(name="Segoe UI", size=9, bold=True, color="008000")
 
     thin_border_side = Side(border_style="thin", color="CCCCCC")
     thin_border = Border(left=thin_border_side, right=thin_border_side, top=thin_border_side, bottom=thin_border_side)
-    thick_bottom = Border(bottom=Side(border_style="medium", color="E51A22"))
 
     # ==========================================
-    # SHEET 1: RINGKASAN & INFORMASI UAT
+    # SHEET 1: INFORMASI UAT & METADATA
     # ==========================================
     ws_info = wb.active
     ws_info.title = "Informasi UAT"
@@ -42,11 +41,11 @@ def generate_uat_excel(file_path):
         ("Nama Aplikasi", "Warmindo JugaJago POS & Table Management System"),
         ("Platform", "Flutter Mobile (Android APK / Tablet Kasir)"),
         ("Backend & Database", "Supabase (PostgreSQL, Storage Bucket, Auth RLS)"),
-        ("Automation Tool", "Maestro UI Testing (Maestro CLI 2.12.0 & Maestro Studio)"),
-        ("Versi Aplikasi", "1.0.0 (Release Candidate)"),
-        ("Tanggal Pengujian", "November 2026"),
-        ("PIC Pengujian (Tester)", "Admin & Kasir Warmindo"),
-        ("Tujuan Pengujian", "Memvalidasi seluruh alur operasional kasir, scan QR meja, pending order, cetak nota, dan otomasi Maestro E2E")
+        ("Tujuan Pengujian", "Memvalidasi seluruh fungsionalitas operasional kasir, scan QR meja, pending order, validasi input, kondisi gagal, dan cetak nota agar memenuhi kebutuhan pengguna nyata."),
+        ("Persona / Peran Pengguna", "1. Kasir: Melayani transaksi, memilih menu, mencatat meja, memproses pembayaran (Tunai/QRIS), mencetak nota struk, dan update status meja.\n2. Admin: Mengelola katalog menu (CRUD + foto galeri), memantau seluruh riwayat, dan mendaftarkan meja baru (QR Generator).\n3. Pelanggan: Melakukan scan QR meja atau makan di tempat (dine-in / takeaway)."),
+        ("Kriteria Penerimaan (Acceptance Criteria)", "1. Seluruh alur utama (Login, Katalog, Scan Meja, Checkout Tunai/QRIS, Riwayat, Cetak Nota) berjalan tanpa kendala dan berstatus LULUS (PASS).\n2. Seluruh validasi input (form login, input manual nomor meja, stok, pembayaran kurang) menampilkan feedback error yang jelas.\n3. Kondisi gagal (meja fiktif/tidak terdaftar, pembatalan pesanan, stok produk dikembalikan) tertangani secara aman tanpa crash.\n4. Bukti pengujian terverifikasi melalui UI screenshot, log Supabase realtime, dan Maestro E2E test report."),
+        ("Prasyarat Pengujian Umum", "1. Perangkat Android telah terinstal APK Warmindo JugaJago v1.0.0.\n2. Koneksi internet aktif ke server database Supabase.\n3. Akun Admin (admin@warmindo.com) dan Akun Kasir (sudahmalam@gmail.com) siap digunakan."),
+        ("Versi Dokumen", "1.1.0 - Sesuai Ketentuan Khusus Standar UAT")
     ]
 
     ws_info.append([])
@@ -57,35 +56,19 @@ def generate_uat_excel(file_path):
         ws_info.cell(row=idx, column=2, value=label).font = bold_font
         ws_info.cell(row=idx, column=2).fill = sub_fill
         ws_info.cell(row=idx, column=2).border = thin_border
+        ws_info.cell(row=idx, column=2).alignment = Alignment(vertical="top", wrap_text=True)
         
-        ws_info.merge_cells(start_row=idx, start_column=3, end_row=idx, end_column=6)
+        ws_info.merge_cells(start_row=idx, start_column=3, end_row=idx, end_column=7)
         val_cell = ws_info.cell(row=idx, column=3, value=val)
         val_cell.font = normal_font
         val_cell.border = thin_border
-        for c in range(3, 7):
+        val_cell.alignment = Alignment(vertical="top", wrap_text=True)
+        for c in range(3, 8):
             ws_info.cell(row=idx, column=c).border = thin_border
 
-    # Summary Sign-off Table
-    sign_row = 14
-    ws_info.cell(row=sign_row, column=2, value="Kriteria Kelulusan UAT (Acceptance Criteria)").font = subtitle_font
-    criteria = [
-        ("Kriteria 1", "Seluruh alur utama (CRUD Menu, Scan QR, Checkout Tunai/QRIS, Meja, Nota) berstatus PASS"),
-        ("Kriteria 2", "Meja yang tidak terdaftar berhasil ditolak secara otomatis oleh sistem"),
-        ("Kriteria 3", "Meja terisi otomatis saat scan/order, dan pengosongan meja dapat dilakukan manual"),
-        ("Kriteria 4", "Nota pesanan dapat diunduh dalam format gambar PNG untuk cetak printer Bluetooth"),
-        ("Kriteria 5", "Pengujian otomatis E2E dengan Maestro UI Testing (minimal 4 flow) berhasil tereksekusi dengan validasi assertion")
-    ]
-    for i, (k, desc) in enumerate(criteria, start=sign_row+1):
-        ws_info.cell(row=i, column=2, value=k).font = bold_font
-        ws_info.cell(row=i, column=2).border = thin_border
-        ws_info.merge_cells(start_row=i, start_column=3, end_row=i, end_column=6)
-        ws_info.cell(row=i, column=3, value=desc).font = normal_font
-        for c in range(3, 7):
-            ws_info.cell(row=i, column=c).border = thin_border
-
     # Approval Box
-    app_row = 21
-    ws_info.cell(row=app_row, column=2, value="Persetujuan & Pengesahan (Sign-off)").font = subtitle_font
+    app_row = 15
+    ws_info.cell(row=app_row, column=2, value="Persetujuan & Pengesahan UAT (Sign-off)").font = subtitle_font
     approvals = [
         ("Peran", "Nama Penguji / Pemeriksa", "Jabatan", "Status"),
         ("Lead Developer", "Hisyam", "Mobile Engineer", "DISETUJUI (APPROVED)"),
@@ -105,24 +88,44 @@ def generate_uat_excel(file_path):
                     cell.font = status_font
                     cell.fill = pass_fill
 
+    ws_info.column_dimensions["A"].width = 4
+    ws_info.column_dimensions["B"].width = 28
+    ws_info.column_dimensions["C"].width = 20
+    ws_info.column_dimensions["D"].width = 20
+    ws_info.column_dimensions["E"].width = 24
+    ws_info.column_dimensions["F"].width = 24
+    ws_info.column_dimensions["G"].width = 24
+
     # ==========================================
-    # SHEET 2: HASIL PENGUJIAN UAT (26 TEST CASES)
+    # SHEET 2: SKENARIO & HASIL PENGUJIAN UAT (LENGKAP SEMUA KOLOM)
     # ==========================================
-    ws_test = wb.create_sheet(title="Hasil Pengujian UAT")
+    ws_test = wb.create_sheet(title="Skenario Pengujian UAT")
     ws_test.views.sheetView[0].showGridLines = True
 
-    # Header Row
+    # Kolom Wajib Sesuai Ketentuan Dosen:
+    # 1. No
+    # 2. Kode UAT
+    # 3. Tujuan Pengujian
+    # 4. Persona / Peran Pengguna
+    # 5. Kriteria Penerimaan
+    # 6. Prasyarat
+    # 7. Langkah Pengujian
+    # 8. Hasil yang Diharapkan (Expected Result)
+    # 9. Hasil Aktual
+    # 10. Status (Lulus/Gagal)
+    # 11. Bukti Pengujian (Test Evidence)
     headers = [
         "No.", 
         "Kode UAT", 
-        "Modul", 
-        "Skenario Pengujian", 
+        "Tujuan Pengujian",
+        "Persona / Peran",
+        "Kriteria Penerimaan",
+        "Prasyarat", 
         "Langkah Pengujian (Test Steps)", 
-        "Data Uji", 
         "Hasil yang Diharapkan (Expected Result)", 
         "Hasil Aktual", 
-        "Status (Pass/Fail)", 
-        "Catatan"
+        "Status (Lulus/Gagal)", 
+        "Bukti Pengujian (Evidence)"
     ]
 
     ws_test.append(headers)
@@ -132,231 +135,218 @@ def generate_uat_excel(file_path):
         cell.fill = header_fill
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = thin_border
-    ws_test.row_dimensions[1].height = 28
+    ws_test.row_dimensions[1].height = 32
 
+    # Skenario Pengujian Komprehensif (Alur Utama, Validasi Input, Kondisi Gagal, Hasil Harapan)
     test_cases = [
-        # MODUL 1: AUTENTIKASI & HAK AKSES
+        # 1. ALUR UTAMA: AUTENTIKASI LOGIN
         (
-            1, "UAT-AUTH-001", "Autentikasi", 
-            "Login sebagai Admin",
-            "1. Buka aplikasi Warmindo JugaJago\n2. Masukkan email & password Admin\n3. Tekan tombol Masuk",
-            "Email: admin@warmindo.com\nRole: admin",
-            "Pengguna berhasil login, badge menampilkan role ADMIN, tab Menu, Scan QR, Meja (dengan tombol Generate Meja Baru), dan Riwayat dapat diakses",
-            "Sesuai harapan", "PASS", "Full CRUD & QR Generator aktif"
-        ),
-        (
-            2, "UAT-AUTH-002", "Autentikasi", 
-            "Login sebagai Kasir",
-            "1. Logout dari akun Admin\n2. Masukkan email & password Kasir\n3. Tekan tombol Masuk",
-            "Email: kasir@warmindo.com\nRole: kasir",
-            "Pengguna berhasil login, badge menampilkan KASIR, tidak dapat menambah meja baru, namun tetap dapat memantau & mengubah status meja",
-            "Sesuai harapan", "PASS", "Tombol Generate QR Meja diproteksi"
-        ),
-        (
-            3, "UAT-AUTH-003", "Autentikasi", 
-            "Validasi Form Login Kosong & Format Email Salah",
-            "1. Buka layar login\n2. Tekan 'Masuk ke POS' tanpa input email/password\n3. Masukkan 'kasirbukanemail' lalu tekan tombol masuk",
-            "Data kosong & format email tidak valid",
-            "Muncul pesan error validasi 'Email tidak boleh kosong' dan 'Format email tidak valid'. Tombol tidak memproses submit.",
-            "Sesuai harapan", "PASS", "Tervalidasi di landing.yaml"
+            1, "UAT-AUTH-001", 
+            "Memvalidasi kasir dapat masuk ke sistem POS dengan kredensial yang sah",
+            "Kasir",
+            "Sistem memverifikasi kredensial dan mengarahkan pengguna ke Dashboard POS",
+            "Aplikasi terbuka pada layar login kasir, akun kasir sudah terdaftar di Supabase Auth",
+            "1. Masukkan email 'sudahmalam@gmail.com'\n2. Masukkan password 'sudahmalam'\n3. Tekan tombol 'Masuk ke POS'",
+            "Pengguna berhasil login, layar berpindah ke Dashboard, menampilkan katalog menu dan tab navigasi (Katalog, Scan QR, Meja, Riwayat)",
+            "Sesuai harapan, login sukses dan masuk ke Dashboard POS",
+            "LULUS (PASS)",
+            "Screenshot Dashboard POS & Log Maestro step 'login.yaml'"
         ),
 
-        # MODUL 2: KATALOG & CRUD MENU DENGAN FOTO GALERI
+        # 2. VALIDASI INPUT: FORM LOGIN KOSONG & SALAH FORMAT
         (
-            4, "UAT-MENU-001", "Katalog Menu", 
-            "Menambah Menu Baru dengan Foto dari Galeri HP",
-            "1. Masuk sebagai Admin ke tab Katalog\n2. Tekan tombol '+ Tambah Menu'\n3. Masukkan nama, harga, stok, kategori\n4. Tekan 'Pilih Gambar dari Galeri'\n5. Pilih file JPG/PNG dari HP\n6. Tekan Simpan",
-            "Nama: Mie Dok-Dok Spesial\nHarga: 15.000\nStok: 50\nFoto: dok_dok.jpg",
-            "Foto berhasil diunggah ke storage Supabase 'products', menu baru langsung tampil di katalog dengan foto dan stok yang benar",
-            "Sesuai harapan", "PASS", "Support JPG, PNG, WebP"
-        ),
-        (
-            5, "UAT-MENU-002", "Katalog Menu", 
-            "Edit Menu & Ganti Foto Galeri",
-            "1. Pada kartu menu di katalog, tekan ikon titik tiga / Edit\n2. Ubah harga atau stok\n3. Ganti gambar dengan memilih foto baru dari galeri\n4. Tekan Simpan Perubahan",
-            "Harga baru: 16.000\nFoto baru: dok_dok_v2.png",
-            "Data menu dan gambar berhasil diperbarui secara realtime di database dan tampilan katalog",
-            "Sesuai harapan", "PASS", "Realtime update"
-        ),
-        (
-            6, "UAT-MENU-003", "Katalog Menu", 
-            "Filter Kategori & Pencarian Menu",
-            "1. Ketik kata kunci 'Goreng' di kolom pencarian\n2. Pilih chip filter 'Indomie Kuah'\n3. Pilih 'Semua'",
-            "Keyword: 'Goreng', Chip: 'Indomie Kuah'",
-            "Daftar menu terfilter secara instan sesuai pencarian atau kategori yang dipilih",
-            "Sesuai harapan", "PASS", "Responsif & cepat"
+            2, "UAT-AUTH-002", 
+            "Memvalidasi sistem menolak input login kosong dan format email salah",
+            "Kasir / User",
+            "Muncul pesan error validasi di bawah field dan login tidak diproses",
+            "Aplikasi terbuka pada layar login dalam kondisi input kosong",
+            "1. Langsung tekan tombol 'Masuk ke POS' tanpa isi form\n2. Amati pesan validasi\n3. Masukkan email salah format 'kasirbukanemail'\n4. Tekan tombol 'Masuk ke POS'",
+            "Sistem menampilkan pesan error: 'Email tidak boleh kosong', 'Password tidak boleh kosong', dan 'Format email tidak valid'",
+            "Sesuai harapan, validasi form muncul secara instan",
+            "LULUS (PASS)",
+            "Screenshot pesan error form & Log Maestro step 'landing.yaml'"
         ),
 
-        # MODUL 3: SCAN QR & VALIDASI NOMOR MEJA
+        # 3. KONDISI GAGAL: LOGIN KREDENSIAL TIDAK SESUAI
         (
-            7, "UAT-SCAN-001", "Scan QR Meja", 
-            "Scan QR Stiker Meja yang Terdaftar",
-            "1. Pelayan/Kasir buka tab 'Scan QR'\n2. Arahkan kamera ke stiker QR Meja 03 yang terdaftar\n3. Tunggu sistem membaca QR",
-            "QR Meja 03 (Format: warmindo_table_03)",
-            "Aplikasi langsung menampilkan notifikasi 'Meja 03 terhubung!', status meja di DB otomatis berubah jadi 'occupied', dan layar otomatis beralih ke Katalog Menu",
-            "Sesuai harapan", "PASS", "Auto-redirect ke katalog"
-        ),
-        (
-            8, "UAT-SCAN-002", "Scan QR Meja", 
-            "Input Manual Nomor Meja yang Terdaftar",
-            "1. Di tab Scan QR, tekan 'Input Manual'\n2. Masukkan nomor meja yang valid (misal: '02')\n3. Tekan 'Hubungkan Meja'",
-            "Input: '02'",
-            "Aplikasi mengenali Meja 02, status Meja 02 di database berubah menjadi 'occupied', dan kasir langsung dialihkan ke Katalog Menu",
-            "Sesuai harapan", "PASS", "Alternatif saat kamera bermasalah"
-        ),
-        (
-            9, "UAT-SCAN-003", "Scan QR Meja", 
-            "Penolakan Meja yang Tidak Terdaftar (Peringatan Otomatis)",
-            "1. Buka tab Scan QR\n2. Arahkan ke QR acak / input nomor meja yang belum dibuat Admin (misal: '99' atau 'XYZ')\n3. Tekan Hubungkan Meja",
-            "Input: '99' (belum terdaftar)",
-            "Aplikasi MENOLAK dan menampilkan notifikasi merah: 'Meja no 99 tidak terdaftar! Silakan hubungi Admin untuk mendaftarkan meja.' dan tidak menghubungkan sesi",
-            "Sesuai harapan", "PASS", "Mencegah transaksi di meja fiktif"
+            3, "UAT-AUTH-003", 
+            "Memvalidasi sistem menolak upaya login dengan password yang salah",
+            "Kasir / User",
+            "Muncul SnackBar peringatan 'Email atau password salah' dan tetap di layar login",
+            "Aplikasi terbuka pada layar login",
+            "1. Masukkan email 'sudahmalam@gmail.com'\n2. Masukkan password salah 'passwordsalah123'\n3. Tekan tombol 'Masuk ke POS'",
+            "Sistem menolak otentikasi, memunculkan notifikasi peringatan kesalahan kredensial, dan tidak memberikan akses masuk",
+            "Sesuai harapan, sistem menolak kredensial yang salah",
+            "LULUS (PASS)",
+            "Screenshot SnackBar peringatan & Log Auth Supabase 400"
         ),
 
-        # MODUL 4: MANAJEMEN STATUS MEJA (KASIR & ADMIN)
+        # 4. ALUR UTAMA: CRUD MENU DENGAN FOTO DARI GALERI HP
         (
-            10, "UAT-TABLE-001", "Manajemen Meja", 
-            "Pemantauan Status Meja Realtime oleh Kasir",
-            "1. Kasir membuka tab 'Meja'\n2. Perhatikan kartu ringkasan di atas (Total, Tersedia, Terisi)\n3. Filter chip 'Tersedia' dan 'Terisi'",
-            "Status filter meja",
-            "Kasir dapat melihat secara jelas meja mana yang kosong (hijau) dan meja mana yang terisi pelanggan (merah) untuk mengarahkan tamu",
-            "Sesuai harapan", "PASS", "Informasi jelas untuk tamu datang"
-        ),
-        (
-            11, "UAT-TABLE-002", "Manajemen Meja", 
-            "Status Meja Otomatis Terisi Saat Order / Scan",
-            "1. Lakukan scan meja atau input meja pada pesanan\n2. Buat pesanan (Lunas maupun Bayar Nanti)\n3. Buka tab Meja",
-            "Meja yang dipesan",
-            "Status meja otomatis berubah menjadi 'TERISI' (occupied) tanpa perlu ditekan manual",
-            "Sesuai harapan", "PASS", "Otomatisasi berjalan baik"
-        ),
-        (
-            12, "UAT-TABLE-003", "Manajemen Meja", 
-            "Pengosongan Meja Manual Saat Pelanggan Pulang",
-            "1. Pelanggan selesai makan dan meninggalkan meja\n2. Kasir/pelayan membuka tab 'Meja'\n3. Pada kartu meja yang terisi, tekan tombol hijau 'Kosongkan Meja (Pelanggan Pulang)'",
-            "Meja berstatus TERISI",
-            "Status meja berubah menjadi 'TERSEDIA' (available), warna kartu menjadi hijau, dan counter meja tersedia bertambah",
-            "Sesuai harapan", "PASS", "Manual release sesuai permintaan"
-        ),
-        (
-            13, "UAT-TABLE-004", "Manajemen Meja", 
-            "Tandai Terisi Secara Manual",
-            "1. Pelanggan datang langsung duduk tanpa scan\n2. Kasir membuka tab 'Meja'\n3. Tekan tombol merah 'Tandai Terisi (Pelanggan Duduk)' pada meja yang bersangkutan",
-            "Meja berstatus TERSEDIA",
-            "Status meja seketika menjadi 'TERISI' (occupied)",
-            "Sesuai harapan", "PASS", "Fleksibel untuk operasional lapangan"
-        ),
-        (
-            14, "UAT-TABLE-005", "Manajemen Meja", 
-            "Generate & Unduh QR Meja Baru (Khusus Admin)",
-            "1. Login Admin -> Buka tab Meja\n2. Tekan 'Generate QR Meja Baru (Admin)'\n3. Masukkan 'Meja 10'\n4. Buka pratinjau QR -> Tekan 'Unduh / Cetak'",
-            "Nomor meja: '10'",
-            "Meja 10 terdaftar di database, gambar stiker QR tersimpan di galeri perangkat dan siap dicetak stiker meja",
-            "Sesuai harapan", "PASS", "Stiker QR meja siap cetak"
+            4, "UAT-MENU-001", 
+            "Memvalidasi Admin dapat menambahkan menu baru lengkap dengan foto dari galeri HP",
+            "Admin",
+            "Foto terunggah ke Supabase Storage dan menu baru langsung tampil di katalog",
+            "Login sebagai Admin, foto menu siap di galeri perangkat",
+            "1. Masuk tab Katalog -> Tekan '+ Tambah Menu'\n2. Masukkan nama 'Mie Dok-Dok', harga '15.000', stok '50'\n3. Tekan 'Pilih Foto dari Galeri HP' lalu pilih file\n4. Tekan 'Simpan Menu'",
+            "Foto berhasil diunggah ke storage bucket 'products', menu baru tersimpan di database dan langsung muncul di daftar menu katalog",
+            "Sesuai harapan, menu dan foto terunggah sempurna",
+            "LULUS (PASS)",
+            "Screenshot kartu menu di Katalog & URL Supabase Storage"
         ),
 
-        # MODUL 5: CHECKOUT & METODE PEMBAYARAN
+        # 5. VALIDASI INPUT: FORM TAMBAH MENU TANPA HARGA / STOK TIDAK VALID
         (
-            15, "UAT-CHECK-001", "Checkout", 
-            "Pembayaran Tunai (Cash) Lunas di Awal",
-            "1. Pilih beberapa menu di Katalog\n2. Buka Keranjang -> Tekan 'Lanjut ke Pembayaran'\n3. Pilih metode 'Tunai'\n4. Masukkan nominal uang yang diterima (atau klik tombol cepat uang pas / +10k / +50k)\n5. Tekan 'Konfirmasi Pembayaran (Lunas)'",
-            "Tagihan: Rp 28.000\nUang Diterima: Rp 50.000",
-            "Sistem menghitung kembalian Rp 22.000, stok produk berkurang, pesanan tersimpan berstatus 'paid', meja tetap terisi, dan nota langsung tampil",
-            "Sesuai harapan", "PASS", "Validasi nominal uang pas/lebih"
-        ),
-        (
-            16, "UAT-CHECK-002", "Checkout", 
-            "Pembayaran dengan QRIS Dinamis",
-            "1. Buka halaman pembayaran\n2. Pilih metode 'QRIS'\n3. QR dinamis langsung ter-generate di layar\n4. Pelanggan scan QRIS dan bayar\n5. Kasir tekan 'Selesai & Cetak Struk (QRIS)'",
-            "Metode: QRIS, Tagihan: Rp 35.000",
-            "Transaksi tersimpan dengan status 'paid', metode 'qris', stok berkurang, dan struk pembayaran QRIS langsung tampil",
-            "Sesuai harapan", "PASS", "QRIS otomatis sesuai tagihan"
-        ),
-        (
-            17, "UAT-CHECK-003", "Checkout", 
-            "Simpan & Bayar Nanti (Pending / Pelanggan Makan Dulu)",
-            "1. Catat pesanan meja\n2. Masuk halaman checkout\n3. Tekan tombol oranye 'Simpan & Bayar Nanti (Pending)'\n4. Tanpa perlu input uang tunai",
-            "Pesanan Meja 03, Bayar Nanti",
-            "Pesanan tersimpan dengan status 'pending', stok bahan mi langsung berkurang, meja tetap 'occupied', keranjang bersih, struk pending muncul",
-            "Sesuai harapan", "PASS", "Alur makan dulu bayar belakangan"
-        ),
-        (
-            18, "UAT-CHECK-004", "Checkout", 
-            "Batalkan Transaksi Saat Pemesanan",
-            "1. Masuk halaman checkout\n2. Tekan tombol 'Batalkan Transaksi Ini'\n3. Konfirmasi pembatalan",
-            "Keranjang aktif",
-            "Keranjang belanja dikosongkan dan kasir dikembalikan ke halaman menu",
-            "Sesuai harapan", "PASS", "Reset keranjang aman"
+            5, "UAT-MENU-002", 
+            "Memvalidasi sistem mencegah penambahan menu tanpa nama atau nominal minus/huruf",
+            "Admin",
+            "Muncul pesan 'Nama menu wajib diisi' / 'Angka tidak valid' dan submit dicegah",
+            "Dialog Tambah Menu Baru terbuka",
+            "1. Kosongkan field Nama Menu\n2. Masukkan teks huruf pada field Harga\n3. Tekan tombol 'Simpan Menu'",
+            "Sistem menandai field dengan warna merah dan pesan validasi: 'Nama menu wajib diisi' dan 'Angka tidak valid'",
+            "Sesuai harapan, data invalid tidak dapat disimpan",
+            "LULUS (PASS)",
+            "Screenshot validasi dialog tambah menu"
         ),
 
-        # MODUL 6: RIWAYAT & PENYELESAIAN PESANAN PENDING
+        # 6. ALUR UTAMA: SCAN QR STIKER MEJA
         (
-            19, "UAT-HIST-001", "Riwayat Transaksi", 
-            "Filter Riwayat (Semua, Lunas, Pending, Batal)",
-            "1. Buka tab 'Riwayat'\n2. Tekan chip 'Pending'\n3. Tekan chip 'Lunas'\n4. Tekan chip 'Batal'",
-            "Status filter: All, Paid, Pending, Cancelled",
-            "Daftar transaksi terfilter dengan akurat sesuai status yang dipilih beserta badge warna masing-masing",
-            "Sesuai harapan", "PASS", "Filter status berfungsi 100%"
-        ),
-        (
-            20, "UAT-HIST-002", "Riwayat Transaksi", 
-            "Selesaikan Pembayaran Pesanan Pending (Bayar di Kasir)",
-            "1. Buka tab Riwayat -> Filter 'Pending'\n2. Pada kartu pesanan pending, tekan tombol hijau 'Bayar Sekarang'\n3. Masukkan uang tunai atau pilih QRIS\n4. Tekan 'Konfirmasi Lunas'",
-            "Pesanan pending sebelumnya",
-            "Status pesanan langsung berubah dari 'pending' menjadi 'paid', riwayat ter-update otomatis",
-            "Sesuai harapan", "PASS", "Pelunasan transaksi sukses"
-        ),
-        (
-            21, "UAT-HIST-003", "Riwayat Transaksi", 
-            "Batalkan Pesanan Pending & Restorasi Stok Produk",
-            "1. Pada pesanan pending di Riwayat, tekan tombol merah 'Batal'\n2. Konfirmasi pembatalan pada dialog peringatan",
-            "Pesanan pending",
-            "Status pesanan menjadi 'cancelled', stok produk otomatis dikembalikan (bertambah lagi sejumlah yang dipesan), meja diset tersedia",
-            "Sesuai harapan", "PASS", "Stok otomatis dipulihkan"
+            6, "UAT-SCAN-001", 
+            "Memvalidasi pelayan dapat menghubungkan sesi meja pelanggan via kamera QR",
+            "Pelayan / Kasir",
+            "Sistem mendeteksi QR, status meja di database otomatis berubah 'TERISI', dan redirect ke katalog",
+            "Kamera aktif, stiker QR Meja 03 terpasang di meja pelanggan",
+            "1. Buka tab 'Scan QR'\n2. Arahkan kamera ke QR Code Meja 03\n3. Tunggu hingga pemindaian selesai",
+            "Muncul notifikasi 'Meja 03 berhasil terhubung!', status meja di sistem menjadi 'occupied', banner meja aktif tampil, dan otomatis beralih ke Katalog Menu",
+            "Sesuai harapan, scan instan dan otomatis membuka katalog",
+            "LULUS (PASS)",
+            "Screenshot banner Meja 03 di Katalog & Log Scan"
         ),
 
-        # MODUL 7: UNDUH & CETAK NOTA STRUK PEMBAYARAN
+        # 7. KONDISI GAGAL: SCAN / INPUT MEJA TIDAK TERDAFTAR (MEJA FIKTIF)
         (
-            22, "UAT-PRINT-001", "Cetak & Unduh Nota", 
-            "Unduh Nota Struk Menjadi Gambar PNG",
-            "1. Selesaikan transaksi atau buka detail transaksi di Riwayat\n2. Pada tampilan struk, tekan tombol hijau 'Unduh & Cetak Nota (PNG)'",
-            "Struk transaksi",
-            "Struk dikonversi menjadi gambar PNG beresolusi tinggi, file tersimpan di perangkat, dan dialog share/cetak otomatis terbuka",
-            "Sesuai harapan", "PASS", "File nota_warmindo_[id].png dibuat"
-        ),
-        (
-            23, "UAT-PRINT-002", "Cetak & Unduh Nota", 
-            "Cetak ke Thermal Printer Bluetooth / Kirim WhatsApp",
-            "1. Setelah nota diunduh dan dialog share sistem terbuka\n2. Pilih aplikasi Bluetooth Printer (RawBT / ESC-POS) atau pilih WhatsApp untuk kirim nota ke pelanggan",
-            "File PNG nota yang diunduh",
-            "Aplikasi printer thermal menerima gambar nota untuk dicetak langsung ke kertas kasir, atau gambar nota terkirim rapi ke chat WA",
-            "Sesuai harapan", "PASS", "Kompatibel printer thermal & WA"
+            7, "UAT-SCAN-002", 
+            "Memvalidasi sistem menolak nomor meja yang belum terdaftar secara otomatis",
+            "Pelayan / Kasir",
+            "Sistem menolak menghubungkan sesi dan menampilkan pesan error merah",
+            "Tab Scan QR terbuka",
+            "1. Tekan tombol 'Input Manual Nomor Meja'\n2. Masukkan nomor meja yang tidak ada (misal: '99')\n3. Tekan 'Hubungkan Meja'",
+            "Muncul notifikasi merah: 'Meja no 99 tidak terdaftar! Silakan hubungi Admin untuk mendaftarkan meja.' dan sesi pesanan tidak dibuka",
+            "Sesuai harapan, penolakan meja fiktif berjalan tegas",
+            "LULUS (PASS)",
+            "Screenshot SnackBar error penolakan meja fiktif"
         ),
 
-        # MODUL 8: AUTOMATION UI TESTING DENGAN MAESTRO
+        # 8. ALUR UTAMA: PEMANTAUAN & UPDATE STATUS MEJA REALTIME
         (
-            24, "UAT-MAESTRO-001", "Automation E2E", 
-            "Uji Otomatis Flow Landing & Validasi Form Error (landing.yaml)",
-            "1. Jalankan `maestro test maestro/flows/landing.yaml`\n2. Amati eksekusi cold start dan assertion validasi error",
-            "Flow landing.yaml",
-            "Maestro berhasil memvalidasi elemen form login kasir dan pesan error 'Email tidak boleh kosong' serta 'Format email tidak valid'",
-            "Sesuai harapan", "PASS", "Status Completed 100%"
+            8, "UAT-TABLE-001", 
+            "Memvalidasi kasir dapat memantau status meja dan mengosongkan meja pelanggan pulang",
+            "Kasir",
+            "Status meja berubah dari TERISI menjadi TERSEDIA dan counter statistik ter-update",
+            "Terdapat meja yang sedang terisi pelanggan",
+            "1. Buka tab 'Meja'\n2. Filter status 'Terisi'\n3. Pada kartu meja terkait, tekan tombol hijau 'Kosongkan Meja (Pelanggan Pulang)'",
+            "Status meja seketika berubah menjadi 'TERSEDIA' (hijau), counter 'Tersedia' bertambah, dan meja siap ditempati tamu berikutnya",
+            "Sesuai harapan, update status meja realtime di seluruh perangkat",
+            "LULUS (PASS)",
+            "Screenshot tab Meja dengan status hijau TERSEDIA"
         ),
+
+        # 9. ALUR UTAMA: TRANSAKSI PEMBAYARAN TUNAI LUNAS & CETAK NOTA
         (
-            25, "UAT-MAESTRO-002", "Automation E2E", 
-            "Uji Otomatis Login & Navigasi Antar Tab (login.yaml)",
-            "1. Jalankan `maestro test maestro/flows/login.yaml`\n2. Amati login otomatis dan perpindahan tab Katalog, Meja, dan Riwayat",
-            "Flow login.yaml",
-            "Login berhasil masuk ke POS, seluruh tab (Katalog, Scan QR, Meja, Riwayat) diverifikasi aktif dengan assertion elemen di setiap tab",
-            "Sesuai harapan", "PASS", "Status Completed 100%"
+            9, "UAT-CHECK-001", 
+            "Memvalidasi alur pemesanan lengkap, checkout pembayaran tunai (uang pas), dan nota struk",
+            "Kasir",
+            "Transaksi tersimpan dengan status 'paid', stok berkurang, dan struk pembayaran tampil",
+            "Menu tersedia di katalog, keranjang belanja terisi",
+            "1. Pilih menu di Katalog -> Tekan 'Tambah'\n2. Buka keranjang via 'Lihat Pesanan' -> Tekan 'Proses Pembayaran'\n3. Pilih metode 'Tunai (Cash)' -> Tekan chip 'Uang Pas'\n4. Tekan 'Konfirmasi Pembayaran (Lunas)'",
+            "Sistem menyimpan transaksi LUNAS di database, mengurangi stok menu, membuka layar Struk Pembayaran dengan rincian lengkap dan tombol Transaksi Baru",
+            "Sesuai harapan, alur checkout tunai lunas selesai sempurna",
+            "LULUS (PASS)",
+            "Screenshot Struk Pembayaran & Log flow 'order_checkout.yaml'"
         ),
+
+        # 10. VALIDASI INPUT & KONDISI GAGAL: PEMBAYARAN TUNAI KURANG
         (
-            26, "UAT-MAESTRO-003", "Automation E2E", 
-            "Uji Otomatis Pemesanan, Bayar Tunai, Struk & Riwayat (order_checkout.yaml)",
-            "1. Jalankan `maestro test maestro/flows/order_checkout.yaml`\n2. Amati pemilihan menu, checkout uang pas, cetak struk, dan pengecekan di riwayat",
-            "Flow order_checkout.yaml",
-            "Alur pemesanan hingga pembayaran lunas selesai otomatis, struk pembayaran tampil, dan riwayat transaksi terkonfirmasi",
-            "Sesuai harapan", "PASS", "Alur E2E lengkap teruji"
+            10, "UAT-CHECK-002", 
+            "Memvalidasi tombol konfirmasi pembayaran nonaktif jika nominal uang tunai kurang",
+            "Kasir",
+            "Muncul peringatan 'Nominal yang dibayar masih kurang' dan tombol konfirmasi disabled",
+            "Layar pembayaran terbuka dengan total tagihan Rp 20.000",
+            "1. Pilih metode 'Tunai (Cash)'\n2. Masukkan nominal uang yang diterima sebesar Rp 10.000 (kurang dari tagihan)\n3. Amati kondisi tombol konfirmasi",
+            "Sistem memunculkan teks merah: 'Nominal yang dibayar masih kurang', tombol 'Konfirmasi Pembayaran (Lunas)' menjadi abu-abu (disabled) dan tidak bisa diklik",
+            "Sesuai harapan, kasir tidak bisa memproses pembayaran kurang",
+            "LULUS (PASS)",
+            "Screenshot field uang tunai kurang & tombol konfirmasi disabled"
+        ),
+
+        # 11. ALUR UTAMA: SIMPAN & BAYAR NANTI (PENDING ORDER)
+        (
+            11, "UAT-CHECK-003", 
+            "Memvalidasi alur pesanan pelanggan makan dulu bayar belakangan",
+            "Kasir",
+            "Pesanan tersimpan dengan status 'pending', meja tetap terisi, dan stok menu langsung berkurang",
+            "Pesanan terhubung dengan nomor meja pelanggan",
+            "1. Tambahkan menu pesanan ke keranjang\n2. Di layar checkout, tekan tombol oranye 'Simpan & Bayar Nanti (Pending)'",
+            "Pesanan tersimpan berstatus 'pending', muncul notifikasi sukses, meja tetap 'TERISI', dan transaksi muncul di tab Riwayat pada filter Pending",
+            "Sesuai harapan, order pending tercatat rapi",
+            "LULUS (PASS)",
+            "Screenshot kartu pesanan Pending di tab Riwayat"
+        ),
+
+        # 12. ALUR UTAMA: PELUNASAN PESANAN PENDING DI TAB RIWAYAT
+        (
+            12, "UAT-HIST-001", 
+            "Memvalidasi kasir dapat melunasi pesanan pending saat pelanggan membayar di kasir",
+            "Kasir",
+            "Status pesanan di database berubah dari pending menjadi 'paid' (lunas)",
+            "Terdapat pesanan pending di tab Riwayat",
+            "1. Buka tab 'Riwayat' -> Filter chip 'Pending'\n2. Pada pesanan terkait, tekan tombol 'Bayar Sekarang'\n3. Masukkan uang tunai -> Tekan 'Konfirmasi Lunas'",
+            "Status pesanan ter-update otomatis menjadi 'Lunas', badge berubah hijau, dan detail transaksi lunas dapat diunduh notanya",
+            "Sesuai harapan, pelunasan berhasil dan data realtime ter-update",
+            "LULUS (PASS)",
+            "Screenshot dialog Bayar Sekarang & status lunas di Riwayat"
+        ),
+
+        # 13. KONDISI GAGAL: PEMBATALAN PESANAN PENDING & PEMULIHAN STOK OTOMATIS
+        (
+            13, "UAT-HIST-002", 
+            "Memvalidasi pembatalan pesanan secara aman dengan pengembalian stok produk",
+            "Kasir",
+            "Pesanan berstatus 'cancelled', stok bahan mi otomatis dikembalikan, dan meja diset tersedia",
+            "Terdapat pesanan pending di Riwayat",
+            "1. Pada pesanan pending, tekan tombol merah 'Batal'\n2. Konfirmasi pada dialog 'Apakah Anda yakin ingin membatalkan pesanan?'\n3. Tekan 'Ya, Batalkan Pesanan'",
+            "Pesanan berstatus 'Dibatalkan', stok produk di database bertambah kembali sejumlah porsi yang batal, dan meja pelanggan otomatis kosong kembali",
+            "Sesuai harapan, stok dan meja pulih otomatis tanpa inkonsistensi data",
+            "LULUS (PASS)",
+            "Screenshot riwayat Batal & kuantitas stok produk di Katalog"
+        ),
+
+        # 14. HASIL HARAPAN PENGGUNA: UNDUH & CETAK NOTA STRUK PNG
+        (
+            14, "UAT-PRINT-001", 
+            "Memvalidasi nota dapat dikonversi menjadi file gambar PNG untuk dicetak ke thermal printer",
+            "Kasir / Pelanggan",
+            "File nota PNG beresolusi tajam tersimpan di perangkat dan siap dicetak via Bluetooth / share WhatsApp",
+            "Transaksi selesai dan berada di layar Struk Pembayaran",
+            "1. Tekan tombol hijau 'Unduh & Cetak Nota (PNG)'\n2. Tunggu proses render nota\n3. Pilih aplikasi cetak printer thermal / share WA pada bottom sheet sistem",
+            "Gambar nota dengan tata letak rapi, logo, rincian pesanan, dan QR pembayaran tersimpan di memori lokal serta siap dikirim ke printer kasir",
+            "Sesuai harapan, nota berkualitas tinggi berhasil digenerate",
+            "LULUS (PASS)",
+            "File gambar nota_warmindo_[id].png & Screenshot popup share"
+        ),
+
+        # 15. ALUR UTAMA: PENGUJIAN OTOMATIS E2E DENGAN MAESTRO
+        (
+            15, "UAT-MAESTRO-001", 
+            "Memvalidasi seluruh alur otomatisasi E2E Maestro berjalan stabil dengan assertion elemen penting",
+            "Developer / QA",
+            "Seluruh flow (landing, login, order_checkout, scrolling) berstatus Completed 100%",
+            "Maestro CLI 2.12.0 aktif dan perangkat Android terhubung via ADB",
+            "1. Jalankan `maestro test maestro/flows/landing.yaml`\n2. Jalankan `maestro test maestro/flows/login.yaml`\n3. Jalankan `maestro test maestro/flows/order_checkout.yaml`\n4. Jalankan `maestro test maestro/flows/scrolling.yaml`",
+            "Semua flow dieksekusi otomatis oleh Maestro driver: launchApp, input teks, hide keyboard, tap tombol, assertion teks/elemen, swipe scrolling, dan seluruh flow bertanda hijau COMPLETED",
+            "Sesuai harapan, 4/4 flow Maestro sukses tanpa error",
+            "LULUS (PASS)",
+            "Terminal output Maestro: [Completed] 4/4 Flows & GitHub Actions CI"
         )
     ]
 
@@ -371,8 +361,8 @@ def generate_uat_excel(file_path):
             cell.border = thin_border
             cell.alignment = Alignment(vertical="top", wrap_text=True)
 
-        # Highlight Status column
-        status_cell = ws_test.cell(row=row_idx, column=9)
+        # Highlight Status column (Col 10)
+        status_cell = ws_test.cell(row=row_idx, column=10)
         status_cell.font = status_font
         status_cell.fill = pass_fill
         status_cell.alignment = Alignment(horizontal="center", vertical="top")
@@ -384,31 +374,24 @@ def generate_uat_excel(file_path):
     # Column Widths
     col_widths = {
         "A": 6,   # No.
-        "B": 18,  # Kode UAT
-        "C": 18,  # Modul
-        "D": 26,  # Skenario
-        "E": 34,  # Langkah
-        "F": 24,  # Data Uji
-        "G": 34,  # Hasil Harapan
-        "H": 18,  # Hasil Aktual
-        "I": 14,  # Status
-        "J": 26   # Catatan
+        "B": 16,  # Kode UAT
+        "C": 26,  # Tujuan Pengujian
+        "D": 16,  # Persona / Peran
+        "E": 28,  # Kriteria Penerimaan
+        "F": 24,  # Prasyarat
+        "G": 32,  # Langkah Pengujian
+        "H": 32,  # Hasil Harapan
+        "I": 24,  # Hasil Aktual
+        "J": 15,  # Status (Lulus/Gagal)
+        "K": 26   # Bukti Pengujian
     }
     for col_letter, width in col_widths.items():
         ws_test.column_dimensions[col_letter].width = width
 
-    # Info sheet widths
-    ws_info.column_dimensions["A"].width = 5
-    ws_info.column_dimensions["B"].width = 28
-    ws_info.column_dimensions["C"].width = 25
-    ws_info.column_dimensions["D"].width = 25
-    ws_info.column_dimensions["E"].width = 25
-    ws_info.column_dimensions["F"].width = 25
-
     # Save workbook
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     wb.save(file_path)
-    print(f"UAT Excel generated successfully at: {file_path}")
+    print(f"UAT Excel updated successfully at: {file_path}")
 
 if __name__ == "__main__":
     generate_uat_excel("d:/warmindo/UAT_Warmindo_JugaJago.xlsx")
