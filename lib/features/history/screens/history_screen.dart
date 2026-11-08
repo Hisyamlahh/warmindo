@@ -143,9 +143,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     children: [
                       Expanded(
                         child: ChoiceChip(
-                          label: const Center(child: Text('Tunai')),
+                          label: Center(
+                            child: Text(
+                              'Tunai',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: paymentMethod == 'cash'
+                                    ? AppTheme.warmindoRed
+                                    : AppTheme.textPrimary,
+                              ),
+                            ),
+                          ),
                           selected: paymentMethod == 'cash',
                           selectedColor: AppTheme.warmindoRed.withValues(alpha: 0.15),
+                          backgroundColor: Colors.white,
+                          side: BorderSide(
+                            color: paymentMethod == 'cash'
+                                ? AppTheme.warmindoRed
+                                : AppTheme.dividerColor,
+                          ),
                           onSelected: (val) {
                             if (val) setDialogState(() => paymentMethod = 'cash');
                           },
@@ -154,9 +170,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: ChoiceChip(
-                          label: const Center(child: Text('QRIS')),
+                          label: Center(
+                            child: Text(
+                              'QRIS',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: paymentMethod == 'qris'
+                                    ? AppTheme.warmindoRed
+                                    : AppTheme.textPrimary,
+                              ),
+                            ),
+                          ),
                           selected: paymentMethod == 'qris',
                           selectedColor: AppTheme.warmindoRed.withValues(alpha: 0.15),
+                          backgroundColor: Colors.white,
+                          side: BorderSide(
+                            color: paymentMethod == 'qris'
+                                ? AppTheme.warmindoRed
+                                : AppTheme.dividerColor,
+                          ),
                           onSelected: (val) {
                             if (val) setDialogState(() => paymentMethod = 'qris');
                           },
@@ -184,7 +216,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       spacing: 6,
                       children: [
                         ActionChip(
-                          label: const Text('Uang Pas'),
+                          label: const Text(
+                            'Uang Pas',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          backgroundColor: Colors.white,
+                          side: const BorderSide(color: AppTheme.dividerColor),
                           onPressed: () {
                             setDialogState(() {
                               cashController.text = order.totalAmount.toInt().toString();
@@ -193,7 +233,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           },
                         ),
                         ActionChip(
-                          label: const Text('+10k'),
+                          label: const Text(
+                            '+10k',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          backgroundColor: Colors.white,
+                          side: const BorderSide(color: AppTheme.dividerColor),
                           onPressed: () {
                             setDialogState(() {
                               final newAmt = enteredCash + 10000;
@@ -203,7 +251,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           },
                         ),
                         ActionChip(
-                          label: const Text('+50k'),
+                          label: const Text(
+                            '+50k',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          backgroundColor: Colors.white,
+                          side: const BorderSide(color: AppTheme.dividerColor),
                           onPressed: () {
                             setDialogState(() {
                               final newAmt = enteredCash + 50000;
