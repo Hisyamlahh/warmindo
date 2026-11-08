@@ -85,6 +85,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             title: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Image.asset(
+                  'assets/images/logo.png',
+                  width: 28,
+                  height: 28,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(width: 8),
                 RichText(
                   text: const TextSpan(
                     children: [
