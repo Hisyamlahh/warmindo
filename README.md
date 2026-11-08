@@ -129,14 +129,15 @@ Aplikasi dilengkapi suite pengujian otomatis UI *End-to-End* berbasis **Maestro 
 - **`maestro/flows/login.yaml`**: Menguji alur sukses login kasir dan verifikasi assertion seluruh tombol navigasi tab (Katalog, Scan QR, Meja, Riwayat).
 - **`maestro/flows/order_checkout.yaml`**: Menguji alur E2E lengkap: login, memilih menu, buka keranjang, checkout tunai uang pas, validasi struk, hingga pengecekan ke tab riwayat.
 - **`maestro/flows/scrolling.yaml`**: Menguji kestabilan gestur swipe scrolling naik-turun pada daftar katalog produk dan daftar meja.
+- **`maestro/flows/riwayat.yaml`**: Menguji filter status transaksi (Lunas, Pending, Batal, Semua), inspeksi nota struk transaksi, dialog pelunasan pesanan pending, dan dialog konfirmasi pembatalan pesanan.
 
 ### Menjalankan Pengujian Maestro:
 ```powershell
 # Jalankan salah satu flow
-maestro test maestro/flows/order_checkout.yaml
+maestro test maestro/flows/riwayat.yaml
 
 # Jalankan seluruh suite pengujian
-maestro test maestro/flows/landing.yaml maestro/flows/login.yaml maestro/flows/order_checkout.yaml maestro/flows/scrolling.yaml
+maestro test maestro/flows/landing.yaml maestro/flows/login.yaml maestro/flows/order_checkout.yaml maestro/flows/scrolling.yaml maestro/flows/riwayat.yaml
 ```
 
 ---

@@ -55,6 +55,7 @@ jobs:
             maestro test maestro/flows/login.yaml
             maestro test maestro/flows/order_checkout.yaml
             maestro test maestro/flows/scrolling.yaml
+            maestro test maestro/flows/riwayat.yaml
 
       - name: Upload Maestro Test Reports
         if: always()

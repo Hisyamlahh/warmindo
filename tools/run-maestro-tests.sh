@@ -72,6 +72,9 @@ else
 
     echo -e "\n${BLUE}>>> 4. Menjalankan Scrolling Flow (maestro/flows/scrolling.yaml)...${NC}"
     maestro test "$FLOWS_DIR/scrolling.yaml"
+
+    echo -e "\n${BLUE}>>> 5. Menjalankan Riwayat & Manajemen Order Flow (maestro/flows/riwayat.yaml)...${NC}"
+    maestro test "$FLOWS_DIR/riwayat.yaml"
 fi
 
 echo -e "\n${GREEN}====================================================${NC}"

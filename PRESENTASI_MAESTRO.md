@@ -80,15 +80,17 @@ Sesuai standar yang diinstruksikan dosen:
 warmindo/
 ├── maestro/
 │   └── flows/
-│       ├── landing.yaml      # Verifikasi Splash & Layar Login Kasir
-│       ├── login.yaml        # Alur Login Kasir & Masuk Dashboard
-│       └── scrolling.yaml    # Uji Swipe Daftar Menu & Meja
+│       ├── landing.yaml         # Verifikasi Splash & Layar Login Kasir
+│       ├── login.yaml           # Alur Login Kasir & Masuk Dashboard
+│       ├── order_checkout.yaml  # Alur Order, Pembayaran & Struk Transaksi
+│       ├── scrolling.yaml       # Uji Swipe Daftar Menu & Meja
+│       └── riwayat.yaml         # Uji Filter Riwayat, Dialog Pending & Batal
 ├── .github/
 │   └── workflows/
-│       └── maestro.yaml      # CI/CD Otomatis di GitHub Actions
+│       └── maestro.yaml         # CI/CD Otomatis di GitHub Actions
 └── tools/
-    ├── run-maestro-tests.sh  # Script helper eksekusi lokal
-    └── pre-commit.sh         # Git pre-commit hook validator
+    ├── run-maestro-tests.sh     # Script helper eksekusi lokal
+    └── pre-commit.sh            # Git pre-commit hook validator
 ```
 
 ---

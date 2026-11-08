@@ -1,0 +1,139 @@
+appId: com.warmindo.warmindo_pos
+info:
+  title: Riwayat Transaksi & Manajemen Order
+  description: Pengujian modul Riwayat Transaksi mencakup filter status (Lunas, Pending, Batal, Semua), inspeksi struk nota transaksi, dialog pembayaran pesanan pending, dan dialog konfirmasi pembatalan.
+---
+- launchApp:
+    clearState: false
+
+# Autentikasi / Pastikan masuk sebagai kasir
+- runFlow:
+    when:
+      visible: "Masuk ke Akun Kasir"
+    commands:
+      - tapOn: "Email"
+      - inputText: "sudahmalam@gmail.com"
+      - tapOn: "Password"
+      - inputText: "sudahmalam"
+      - hideKeyboard
+      - tapOn: "Masuk ke POS"
+
+# Tunggu dashboard kasir siap dan navigasi ke tab Riwayat
+- extendedWaitUntil:
+    visible: "Riwayat.*"
+    timeout: 15000
+- tapOn: "Riwayat.*"
+
+# Verifikasi halaman Riwayat termuat dengan filter lengkap
+- extendedWaitUntil:
+    visible: "Semua Tanggal"
+    timeout: 10000
+- assertVisible: "Semua Tanggal"
+- assertVisible: "Semua"
+- assertVisible: "Lunas"
+- assertVisible: "Pending"
+- assertVisible: "Batal"
+
+# ==============================================================================
+# ALUR 1: Filter Status "Lunas" & Inspeksi Struk Transaksi Terakhir
+# ==============================================================================
+# 1. Tap on filter chip Lunas
+- tapOn: "Lunas"
+- extendedWaitUntil:
+    visible: "#.*"
+    timeout: 10000
+- assertVisible: "#.*"
+
+# 2. Tap on transaksi terakhir (kartu pesanan teratas)
+- tapOn: "#.*"
+
+# 3. Verifikasi bottom sheet Detail Struk Transaksi terbuka
+- extendedWaitUntil:
+    visible: "Detail Struk Transaksi"
+    timeout: 10000
+- assertVisible: "Detail Struk Transaksi"
+- assertVisible: "Unduh Nota (PNG)"
+- assertVisible: "WARMINDO JUGAJAGO"
+
+# 4. Balik ke tampilan riwayat (tutup bottom sheet struk)
+- back
+- extendedWaitUntil:
+    visible: "Semua Tanggal"
+    timeout: 5000
+- assertVisible: "Semua Tanggal"
+
+# ==============================================================================
+# ALUR 2: Filter Status "Pending", Cek Transaksi & Dialog Bayar Sekarang
+# ==============================================================================
+# 1. Tap on filter chip Pending
+- tapOn: "Pending"
+- extendedWaitUntil:
+    visible: "Pesanan belum dibayar"
+    timeout: 10000
+- assertVisible: "Pesanan belum dibayar"
+- assertVisible: "Bayar Sekarang"
+
+# 2. Tap on tombol "Bayar Sekarang" pada transaksi pending terakhir
+- tapOn: "Bayar Sekarang"
+
+# 3. Verifikasi dialog modal pembayaran pending terbuka dengan komponen lengkap
+- extendedWaitUntil:
+    visible: "Metode Pembayaran:"
+    timeout: 10000
+- assertVisible: "Bayar #.*"
+- assertVisible: "Metode Pembayaran:"
+- assertVisible: "Tunai"
+- assertVisible: "QRIS"
+- assertVisible: "Uang Diterima (Rp)"
+- assertVisible: "Uang Pas"
+- assertVisible: "Tutup"
+- assertVisible: "Konfirmasi Lunas"
+
+# 4. Tap on "Tutup" untuk membatalkan dialog pembayaran dan kembali ke daftar
+- tapOn: "Tutup"
+- assertNotVisible: "Konfirmasi Lunas"
+
+# ==============================================================================
+# ALUR 3: Dialog Konfirmasi Batalkan Pesanan (Dismiss / Batal Kembali)
+# ==============================================================================
+# 1. Tap on tombol Batal pada kartu pesanan pending (index 1 karena index 0 adalah filter chip Batal)
+- tapOn:
+    text: "Batal"
+    index: 1
+
+# 2. Verifikasi dialog konfirmasi pembatalan pesanan muncul
+- extendedWaitUntil:
+    visible: "Batalkan Pesanan\\?"
+    timeout: 10000
+- assertVisible: "Batalkan Pesanan\\?"
+- assertVisible: "Stok menu akan dikembalikan.*"
+- assertVisible: "Ya, Batalkan Pesanan"
+
+# 3. Di tampilan batalkan pesanan, tap on tombol "Batal" lagi (batal membatalkan)
+- tapOn: "Batal"
+
+# 4. Pastikan dialog tertutup dan kartu transaksi tetap ada
+- assertNotVisible: "Ya, Batalkan Pesanan"
+- assertVisible: "Pesanan belum dibayar"
+
+# ==============================================================================
+# ALUR TAMBAHAN (Best Practices): Pengujian Filter Batal & Reset ke Semua
+# ==============================================================================
+# 1. Tap on filter chip Batal (index 0)
+- tapOn:
+    text: "Batal"
+    index: 0
+
+# 2. Tap on filter chip Semua untuk me-reset filter
+- tapOn: "Semua"
+- extendedWaitUntil:
+    visible: "#.*"
+    timeout: 10000
+- assertVisible: "#.*"
+
+# 3. Uji kelancaran gestur swipe daftar riwayat transaksi
+- swipe:
+    direction: UP
+- swipe:
+    direction: DOWN
+- assertVisible: "Semua"
