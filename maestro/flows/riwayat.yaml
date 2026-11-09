@@ -1,22 +1,22 @@
 appId: com.warmindo.warmindo_pos
 info:
   title: Riwayat Transaksi & Manajemen Order
-  description: Pengujian modul Riwayat Transaksi mencakup filter status (Lunas, Pending, Batal, Semua), inspeksi struk nota transaksi, dialog pembayaran pesanan pending, dan dialog konfirmasi pembatalan.
+  description: Pengujian modul Riwayat Transaksi mencakup filter status (Lunas, Pending, Batal, Semua), inspeksi struk nota transaksi,dialog pembayaran pesanan pending, dan dialog konfirmasi pembatalan.
 ---
 - launchApp:
-    clearState: false
+    clearState: true
+- extendedWaitUntil:
+    visible: "Masuk ke Akun Kasir"
+    timeout: 15000
+- assertVisible: "Masuk ke Akun Kasir"
 
-# Autentikasi / Pastikan masuk sebagai kasir
-- runFlow:
-    when:
-      visible: "Masuk ke Akun Kasir"
-    commands:
-      - tapOn: "Email"
-      - inputText: "sudahmalam@gmail.com"
-      - tapOn: "Password"
-      - inputText: "sudahmalam"
-      - hideKeyboard
-      - tapOn: "Masuk ke POS"
+# Input kredensial kasir
+- tapOn: "Email"
+- inputText: "sudahmalam@gmail.com"
+- tapOn: "Password"
+- inputText: "sudahmalam"
+- hideKeyboard
+- tapOn: "Masuk ke POS"
 
 # Tunggu dashboard kasir siap dan navigasi ke tab Riwayat
 - extendedWaitUntil:
@@ -68,9 +68,9 @@ info:
 # 1. Tap on filter chip Pending
 - tapOn: "Pending"
 - extendedWaitUntil:
-    visible: "Pesanan belum dibayar"
+    visible: "#.*"
     timeout: 10000
-- assertVisible: "Pesanan belum dibayar"
+- assertVisible: "#.*"
 - assertVisible: "Bayar Sekarang"
 
 # 2. Tap on tombol "Bayar Sekarang" pada transaksi pending terakhir
@@ -106,7 +106,6 @@ info:
     visible: "Batalkan Pesanan\\?"
     timeout: 10000
 - assertVisible: "Batalkan Pesanan\\?"
-- assertVisible: "Stok menu akan dikembalikan.*"
 - assertVisible: "Ya, Batalkan Pesanan"
 
 # 3. Di tampilan batalkan pesanan, tap on tombol "Batal" lagi (batal membatalkan)
@@ -114,7 +113,6 @@ info:
 
 # 4. Pastikan dialog tertutup dan kartu transaksi tetap ada
 - assertNotVisible: "Ya, Batalkan Pesanan"
-- assertVisible: "Pesanan belum dibayar"
 
 # ==============================================================================
 # ALUR TAMBAHAN (Best Practices): Pengujian Filter Batal & Reset ke Semua

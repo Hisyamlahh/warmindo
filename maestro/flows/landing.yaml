@@ -4,7 +4,7 @@ info:
   description: Uji verifikasi layar login dan validasi form login kasir.
 ---
 - launchApp:
-    clearState: false
+    clearState: true
 - extendedWaitUntil:
     visible: "Masuk ke Akun Kasir"
     timeout: 15000
